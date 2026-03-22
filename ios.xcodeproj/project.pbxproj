@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4D1C71312F338D7600261113 /* Auth0.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4D1C71302F338D7600261113 /* Auth0.plist */; };
+		4D1FEB9B2F52F69000D21C61 /* Dibba.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4D1FEB9A2F52F69000D21C61 /* Dibba.icon */; };
 		4D6EFDCD2F01145100D21EB9 /* Dashboard in Frameworks */ = {isa = PBXBuildFile; productRef = 4D6EFDCC2F01145100D21EB9 /* Dashboard */; };
 		4D6EFDD02F01147100D21EB9 /* Feed in Frameworks */ = {isa = PBXBuildFile; productRef = 4D6EFDCF2F01147100D21EB9 /* Feed */; };
 		4D6EFDD32F01148A00D21EB9 /* Navigation in Frameworks */ = {isa = PBXBuildFile; productRef = 4D6EFDD22F01148A00D21EB9 /* Navigation */; };
@@ -35,6 +36,7 @@
 
 /* Begin PBXFileReference section */
 		4D1C71302F338D7600261113 /* Auth0.plist */ = {isa = PBXFileReference; lastKnownFileType = text; path = Auth0.plist; sourceTree = "<group>"; };
+		4D1FEB9A2F52F69000D21C61 /* Dibba.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = Dibba.icon; sourceTree = "<group>"; };
 		4D5A40742E9A5FC800A0755C /* ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D5A40852E9A5FCA00A0755C /* iosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D5A408F2E9A5FCA00A0755C /* iosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -103,6 +105,7 @@
 				4D5A40882E9A5FCA00A0755C /* iosTests */,
 				4D5A40922E9A5FCA00A0755C /* iosUITests */,
 				4D5A40752E9A5FC800A0755C /* Products */,
+				4D1FEB9A2F52F69000D21C61 /* Dibba.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -266,6 +269,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D1C71312F338D7600261113 /* Auth0.plist in Resources */,
+				4D1FEB9B2F52F69000D21C61 /* Dibba.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -452,6 +456,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SupportingFiles/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Dibba;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -475,7 +480,7 @@
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 2.1;
 			};
 			name = Debug;
@@ -495,6 +500,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SupportingFiles/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Dibba;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -518,7 +524,7 @@
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 2.1;
 			};
 			name = Release;

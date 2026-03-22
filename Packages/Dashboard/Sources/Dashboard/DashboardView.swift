@@ -18,6 +18,8 @@ public struct DashboardView: View {
                     .redacted(reason: isLoading ? .placeholder : [])
                     .padding(.horizontal)
 
+                TargetsView()
+
                 RecentTransactionsView()
             }
             .padding(.vertical)

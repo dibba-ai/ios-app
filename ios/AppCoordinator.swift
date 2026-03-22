@@ -43,6 +43,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
     @Dependency(\.appResetServiceRegistrar) var appResetServiceRegistrar
     @Dependency(\.profileService) var profileService
     @Dependency(\.transactionService) var transactionService
+    @Dependency(\.targetService) var targetService
 
     func start() {
         logger.info("AppCoordinator.start()")
@@ -164,7 +165,8 @@ final class AppCoordinator: NavigationFlowCoordinating {
         Task {
             async let profilePreload: () = preloadProfile()
             async let transactionsPreload: () = preloadTransactions()
-            _ = await (profilePreload, transactionsPreload)
+            async let targetsPreload: () = preloadTargets()
+            _ = await (profilePreload, transactionsPreload, targetsPreload)
             logger.info("Data preloading complete")
         }
 
@@ -197,6 +199,15 @@ final class AppCoordinator: NavigationFlowCoordinating {
             logger.info("Transactions preloaded")
         } catch {
             logger.warning("Transactions preload failed: \(error.localizedDescription)")
+        }
+    }
+
+    private func preloadTargets() async {
+        do {
+            _ = try await targetService.getTargets(force: false)
+            logger.info("Targets preloaded")
+        } catch {
+            logger.warning("Targets preload failed: \(error.localizedDescription)")
         }
     }
 
