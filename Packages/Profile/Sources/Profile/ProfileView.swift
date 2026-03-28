@@ -147,6 +147,7 @@ public struct ProfileView: View {
                 subscriptionSection(profile: profile)
                 preferencesSection(profile: profile)
                 notificationsSection(profile: profile)
+                apiKeysSection
                 actionsSection
 
                 Section {} footer: {
@@ -184,14 +185,18 @@ public struct ProfileView: View {
     @Dependency(\.transactionService) private var transactionService
     @Dependency(\.targetService) private var targetService
     @Dependency(\.reportService) private var reportService
+    @Dependency(\.apiKeyService) private var apiKeyService
 
     @State private var profile: Servicing.Profile?
+    @State private var apiKeys: [Servicing.ApiKey] = []
     @State private var isLoadingProfile = false
     @State private var isUpdating = false
     @State private var showLogoutConfirmation = false
     @State private var showDeleteAccountConfirmation = false
     @State private var showCacheResetConfirmation = false
     @State private var showCacheResetSuccess = false
+    @State private var isCreatingApiKey = false
+    @State private var newApiKeyId: String?
 
     private let onLogout: (() -> Void)?
 
@@ -208,6 +213,12 @@ public struct ProfileView: View {
             logger.info("Profile loaded: \(profile?.displayName ?? "nil")")
         } catch {
             logger.error("Profile loading failed: \(error.localizedDescription)")
+        }
+
+        do {
+            apiKeys = try await apiKeyService.getApiKeys(force: force)
+        } catch {
+            logger.error("API keys loading failed: \(error.localizedDescription)")
         }
     }
 
@@ -457,6 +468,80 @@ public struct ProfileView: View {
         }
     }
 
+    // MARK: - API Keys Section
+
+    @ViewBuilder
+    private var apiKeysSection: some View {
+        Section("Devices") {
+            ForEach(apiKeys) { apiKey in
+                HStack {
+                    Image(systemName: "iphone")
+                        .foregroundStyle(.secondary)
+                        .frame(width: 24)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(apiKey.name)
+                            .font(.body)
+                        Text(apiKey.formattedCreatedAt)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    if apiKey.isActive {
+                        Text("Active")
+                            .font(.caption)
+                            .foregroundStyle(.green)
+                    } else {
+                        Text("Inactive")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            Button {
+                Task { await addDevice() }
+            } label: {
+                HStack {
+                    Label("Add Device", systemImage: "plus.circle")
+                    if isCreatingApiKey {
+                        Spacer()
+                        ProgressView()
+                    }
+                }
+            }
+            .disabled(isCreatingApiKey)
+
+            NavigationLink(isActive: Binding(
+                get: { newApiKeyId != nil },
+                set: { if !$0 { newApiKeyId = nil } }
+            )) {
+                if let apiKeyId = newApiKeyId {
+                    ConnectDeviceOptionsView(apiKeyId: apiKeyId)
+                }
+            } label: {
+                EmptyView()
+            }
+            .hidden()
+        }
+    }
+
+    private func addDevice() async {
+        isCreatingApiKey = true
+        defer { isCreatingApiKey = false }
+
+        do {
+            let deviceName = UIDevice.current.name
+            let apiKey = try await apiKeyService.createApiKey(name: deviceName)
+            apiKeys = await apiKeyService.cachedApiKeys
+            newApiKeyId = apiKey.id
+        } catch {
+            logger.error("Failed to create API key: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - Actions Section
 
     @ViewBuilder
@@ -483,6 +568,7 @@ public struct ProfileView: View {
                         await targetService.clearCache()
                         await reportService.clearCache()
                         await profileService.clearCache()
+                        await apiKeyService.clearCache()
                         showCacheResetSuccess = true
                     }
                 }

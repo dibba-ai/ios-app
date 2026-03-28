@@ -5,9 +5,9 @@ import Auth
 // MARK: - API Configuration
 
 public enum APIConfiguration {
-    public static let apiServiceURL = URL(string: "https://graph.dibba.ai/graphql")!
-    public static let identityServiceURL = URL(string: "https://identity.dibba.ai/graphql")!
-    public static let billingServiceURL = URL(string: "https://billing.dibba.ai/graphql")!
+    public static let apiServiceURL = URL(string: "https://api-service.dibba.ai/graphql")!
+    public static let identityServiceURL = URL(string: "https://id.dibba.ai/graphql")!
+    public static let billingServiceURL = URL(string: "https://billing-service.dibba.ai/graphql")!
 }
 
 // MARK: - API Client Protocol
@@ -30,6 +30,10 @@ public protocol APIClienting: Sendable {
 
     // Reports
     func listReports(ids: [String]) async throws -> [ReportDTO]
+
+    // API Keys
+    func listApiKeys() async throws -> [ApiKeyDTO]
+    func createApiKey(input: CreateApiKeyInput) async throws -> ApiKeyDTO
 }
 
 // MARK: - API Client Implementation
@@ -139,6 +143,26 @@ public final class APIClient: APIClienting, @unchecked Sendable {
             operationName: "updateTarget"
         )
         return response.updateTarget
+    }
+
+    // MARK: - API Keys (API Service)
+
+    public func listApiKeys() async throws -> [ApiKeyDTO] {
+        let response: ListApiKeysResponse = try await apiClient.execute(
+            query: ApiKeyQueries.listApiKeys,
+            variables: EmptyVariables(),
+            operationName: "listApiKeys"
+        )
+        return response.listApiKeys
+    }
+
+    public func createApiKey(input: CreateApiKeyInput) async throws -> ApiKeyDTO {
+        let response: CreateApiKeyResponse = try await apiClient.execute(
+            query: ApiKeyQueries.createApiKey,
+            variables: CreateApiKeyVariables(input: input),
+            operationName: "createApiKey"
+        )
+        return response.createApiKey
     }
 
     // MARK: - Reports (API Service)
@@ -330,6 +354,20 @@ public final class MockAPIClient: APIClienting, @unchecked Sendable {
             archived: input.archived,
             createdAt: Date(),
             updatedAt: Date()
+        )
+    }
+
+    public func listApiKeys() async throws -> [ApiKeyDTO] {
+        []
+    }
+
+    public func createApiKey(input: CreateApiKeyInput) async throws -> ApiKeyDTO {
+        ApiKeyDTO(
+            id: UUID().uuidString,
+            name: input.name,
+            active: true,
+            createdAt: Int(Date().timeIntervalSince1970),
+            createdAtIso: ISO8601DateFormatter().string(from: Date())
         )
     }
 

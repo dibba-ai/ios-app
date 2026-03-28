@@ -29,3 +29,9 @@ extension ReportService: StateResetting {
         await clearCache()
     }
 }
+
+extension ApiKeyService: StateResetting {
+    public func resetState() async throws {
+        await clearCache()
+    }
+}

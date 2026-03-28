@@ -125,8 +125,6 @@ private struct LoginScreen: View {
             Spacer()
                 .frame(height: 40)
 
-            LegalFooter()
-
             Spacer()
                 .frame(height: 20)
         }

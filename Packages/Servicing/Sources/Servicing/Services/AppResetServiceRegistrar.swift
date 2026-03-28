@@ -21,6 +21,7 @@ public struct AppResetServiceRegistrar: Sendable {
     @Dependency(\.transactionService) private var transactionService
     @Dependency(\.targetService) private var targetService
     @Dependency(\.reportService) private var reportService
+    @Dependency(\.apiKeyService) private var apiKeyService
 
     public init() {}
 
@@ -46,6 +47,11 @@ public struct AppResetServiceRegistrar: Sendable {
         if let service = reportService as? any StateResetting {
             appResetService.register(service)
             logger.debug("Registered ReportService")
+        }
+
+        if let service = apiKeyService as? any StateResetting {
+            appResetService.register(service)
+            logger.debug("Registered ApiKeyService")
         }
 
         logger.info("All services registered for reset")
