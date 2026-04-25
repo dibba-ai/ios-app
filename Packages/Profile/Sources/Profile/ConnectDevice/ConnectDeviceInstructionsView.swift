@@ -144,7 +144,7 @@ struct ConnectDeviceInstructionsView: View {
 
     private var forwardingSteps: [InstructionStep] {
         var result: [InstructionStep] = [
-            .init("Tap **New Blank Automation**"),
+            .init("Tap **Create New Shortcut**"),
             .init("Search **Get Contents of URL**, tap it"),
             .init("Paste the webhook URL"),
             .init("Tap expand, change Method to **POST**"),
@@ -153,22 +153,22 @@ struct ConnectDeviceInstructionsView: View {
         switch method {
         case .applePay:
             result += [
-                .init("Add field: key **merchant**, value **Shortcut Input** > Merchant"),
-                .init("Add field: key **amount**, value **Shortcut Input** > Amount"),
-                .init("Add field: key **card**, value **Shortcut Input** > Card or Pass"),
+                .init("Add Text Field **merchant**, value **Shortcut Input** > Merchant"),
+                .init("Add Text Field **amount**, value **Shortcut Input** > Amount"),
+                .init("Add Text Field **card**, value **Shortcut Input** > Card or Pass"),
             ]
         case .sms:
             result += [
-                .init("Add field: key **text**, value **Shortcut Input**"),
-                .init("Add field: key **from**, value **Shortcut Input** > Sender"),
+                .init("Add Text Field **text**, value **Shortcut Input**"),
+                .init("Add Text Field **from**, value **Shortcut Input** > Sender"),
             ]
         }
 
         if includeLocation {
-            result.append(.init("Add field: key **location**, value **Current Location**"))
+            result.append(.init("Add Text Field **location**, value **Current Location**"))
         }
 
-        result.append(.init("Tap **Done**"))
+        result.append(.init("Tap on **Done**"))
         return result
     }
 
@@ -205,7 +205,7 @@ struct ConnectDeviceInstructionsView: View {
     private var copiedToast: some View {
         HStack(spacing: 6) {
             Image(systemName: "checkmark.circle.fill")
-            Text("Webhook URL copied")
+            Text("URL copied")
         }
         .font(.subheadline)
         .fontWeight(.medium)
@@ -218,7 +218,7 @@ struct ConnectDeviceInstructionsView: View {
 
     private func copyToClipboard() {
         UIPasteboard.general.string = webhookURL
-        logger.info("Webhook URL copied to clipboard")
+        logger.info("URL copied to clipboard")
         showCopiedToast = true
         Task {
             try? await Task.sleep(for: .seconds(2))
