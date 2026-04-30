@@ -89,15 +89,7 @@ public actor ApiKeyService: ApiKeyServicing {
 
 extension ApiKey {
     init(from dto: ApiKeyDTO) {
-        let createdAt: Date
-        if let isoString = dto.createdAtIso {
-            let formatter = ISO8601DateFormatter()
-            createdAt = formatter.date(from: isoString) ?? Date()
-        } else if let timestamp = dto.createdAt {
-            createdAt = Date(timeIntervalSince1970: TimeInterval(timestamp))
-        } else {
-            createdAt = Date()
-        }
+        let createdAt: Date = Self.decodeCreatedAt(iso: dto.createdAtIso, timestamp: dto.createdAt) ?? Date()
 
         self.init(
             id: dto.id,
@@ -106,6 +98,24 @@ extension ApiKey {
             createdAt: createdAt,
             createdAtTimestamp: dto.createdAt
         )
+    }
+
+    private static func decodeCreatedAt(iso: String?, timestamp: Int?) -> Date? {
+        if let iso, let date = parseISO8601(iso) {
+            return date
+        }
+        if let timestamp {
+            return Date(timeIntervalSince1970: TimeInterval(timestamp))
+        }
+        return nil
+    }
+
+    private static func parseISO8601(_ string: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: string) { return date }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: string)
     }
 }
 

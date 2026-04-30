@@ -37,14 +37,22 @@ public struct ApiKey: Codable, Equatable, Sendable, Identifiable {
         createdAtTimestamp = try container.decodeIfPresent(Int.self, forKey: .createdAtTimestamp)
 
         // Try to decode ISO string first, fall back to timestamp
-        if let isoString = try container.decodeIfPresent(String.self, forKey: .createdAt) {
-            let formatter = ISO8601DateFormatter()
-            createdAt = formatter.date(from: isoString) ?? Date()
+        if let isoString = try container.decodeIfPresent(String.self, forKey: .createdAt),
+           let date = Self.parseISO8601(isoString) {
+            createdAt = date
         } else if let timestamp = createdAtTimestamp {
             createdAt = Date(timeIntervalSince1970: TimeInterval(timestamp))
         } else {
             createdAt = Date()
         }
+    }
+
+    private static func parseISO8601(_ string: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: string) { return date }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: string)
     }
 }
 

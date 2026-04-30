@@ -1,10 +1,17 @@
 import Foundation
 import Dependencies
-import Sharing
 import ApiClient
+import Database
 import os.log
 
 private let logger = Logger(subsystem: "ai.dibba.ios", category: "TransactionService")
+
+// MARK: - Initial Sync Defaults Keys
+
+public enum InitialSyncDefaults {
+    public static let completedKey = "feed.initialSyncCompleted"
+    public static let nextTokenKey = "feed.initialSyncNextToken"
+}
 
 // MARK: - Transaction Service Protocol
 
@@ -50,21 +57,28 @@ public struct TransactionListResult: Sendable {
 
 public actor TransactionService: TransactionServicing {
     @Dependency(\.apiClient) private var client
+    @Dependency(\.transactionStore) private var store
 
-    // File storage cache for list data
-    @Shared(.fileStorage(
-        .cachesDirectory.appending(components: "cachedTransactions.json")
-    )) private var _cachedTransactions: [Transaction]?
-
-    // Task deduplication
     private var loadAllTask: Task<[Transaction], any Error>?
 
-    public init() {}
+    public init() {
+        // Best-effort cleanup of legacy on-disk JSON cache from the previous storage layer.
+        let url = URL.cachesDirectory.appending(components: "cachedTransactions.json")
+        try? FileManager.default.removeItem(at: url)
+    }
 
     // MARK: - Public Methods
 
     public var cachedTransactions: [Transaction] {
-        _cachedTransactions ?? []
+        get async {
+            do {
+                let page = try await store.page(filter: TransactionFilter(), limit: Int.max, after: nil)
+                return page.records.compactMap(Transaction.init(from:))
+            } catch {
+                logger.error("cachedTransactions failed: \(error.localizedDescription)")
+                return []
+            }
+        }
     }
 
     public func fetchPage(nextToken: String? = nil, perPage: Int = 100) async throws -> TransactionListResult {
@@ -73,44 +87,40 @@ public actor TransactionService: TransactionServicing {
         let data = try await client.listTransactions(nextToken: nextToken, perPage: perPage)
         let page = data.list.map { Transaction(from: $0) }
 
-        $_cachedTransactions.withLock { cached in
-            var existing = cached ?? []
-            let existingIds = Set(existing.map(\.id))
-            let newItems = page.filter { !existingIds.contains($0.id) }
-            existing.append(contentsOf: newItems)
-            cached = existing
-            logger.debug("fetchPage: appended \(newItems.count) to cache, total: \(existing.count)")
-        }
+        try await store.upsert(page.map(TransactionRecord.init(from:)))
+        logger.debug("fetchPage: upserted \(page.count) records")
 
         return TransactionListResult(transactions: page, nextToken: data.nextToken)
     }
 
     public func refreshTransactions(perPage: Int = 100) async throws -> TransactionListResult {
-        let cached = _cachedTransactions ?? []
-        guard !cached.isEmpty else {
-            logger.debug("refreshTransactions: no cache, loading all pages")
+        let cachedCount = (try? await store.count(filter: TransactionFilter())) ?? 0
+        guard cachedCount > 0 else {
+            logger.debug("refreshTransactions: empty store, loading all pages")
             var token: String? = nil
             repeat {
                 let page = try await fetchPage(nextToken: token, perPage: perPage)
                 token = page.nextToken
             } while token != nil
-            return TransactionListResult(transactions: _cachedTransactions ?? [], nextToken: nil)
+            return TransactionListResult(transactions: await cachedTransactions, nextToken: nil)
         }
 
-        let cachedIds = Set(cached.map(\.id))
         var newTransactions: [Transaction] = []
         var pageToken: String? = nil
         var foundOverlap = false
 
-        logger.info("refreshTransactions: checking for new transactions, cached count: \(cached.count)")
+        logger.info("refreshTransactions: checking for new transactions, cached count: \(cachedCount)")
 
         repeat {
             let data = try await client.listTransactions(nextToken: pageToken, perPage: perPage)
             let page = data.list.map { Transaction(from: $0) }
             logger.debug("refreshTransactions: fetched page with \(page.count) transactions")
 
+            let pageIds = page.map(\.id)
+            let existing = (try? await store.existingIds(in: pageIds)) ?? []
+
             for transaction in page {
-                if cachedIds.contains(transaction.id) {
+                if existing.contains(transaction.id) {
                     foundOverlap = true
                     break
                 }
@@ -124,22 +134,13 @@ public actor TransactionService: TransactionServicing {
         logger.info("refreshTransactions: found \(newTransactions.count) new transactions")
 
         if !newTransactions.isEmpty {
-            $_cachedTransactions.withLock { cached in
-                var existing = cached ?? []
-                let existingIds = Set(existing.map(\.id))
-                let deduped = newTransactions.filter { !existingIds.contains($0.id) }
-                existing.insert(contentsOf: deduped, at: 0)
-                cached = existing
-                logger.debug("refreshTransactions: prepended \(deduped.count), total: \(existing.count)")
-            }
+            try await store.upsert(newTransactions.map(TransactionRecord.init(from:)))
         }
 
-        let updatedCache = _cachedTransactions ?? []
-        return TransactionListResult(transactions: updatedCache, nextToken: nil)
+        return TransactionListResult(transactions: await cachedTransactions, nextToken: nil)
     }
 
     public func loadAllTransactions(untilDate: Date? = nil) async throws -> [Transaction] {
-        // Return in-flight request if exists
         if let loadAllTask {
             return try await loadAllTask.value
         }
@@ -154,7 +155,6 @@ public actor TransactionService: TransactionServicing {
                 let transactions = result.list.map { Transaction(from: $0) }
                 allTransactions.append(contentsOf: transactions)
 
-                // Check if we've reached the target date
                 if let lastTransaction = transactions.last,
                    lastTransaction.createdAt.timeIntervalSince1970 < targetTimestamp {
                     break
@@ -170,57 +170,42 @@ public actor TransactionService: TransactionServicing {
         defer { loadAllTask = nil }
 
         let transactions = try await task.value
-        $_cachedTransactions.withLock { $0 = transactions }
+        try await store.upsert(transactions.map(TransactionRecord.init(from:)))
         return transactions
     }
 
     public func createTransaction(_ input: CreateTransactionInput) async throws -> Transaction {
         let dto = try await client.createTransaction(input: input)
         let transaction = Transaction(from: dto)
-
-        // Add to cache
-        $_cachedTransactions.withLock { cached in
-            var transactions = cached ?? []
-            transactions.insert(transaction, at: 0)
-            cached = transactions
-        }
-
+        try await store.upsert([TransactionRecord(from: transaction)])
         return transaction
     }
 
     public func updateTransaction(id: String, input: UpdateTransactionInput) async throws -> Transaction {
         let dto = try await client.updateTransaction(id: id, input: input)
         let transaction = Transaction(from: dto)
-
-        // Update cache
-        $_cachedTransactions.withLock { cached in
-            guard var transactions = cached else { return }
-            if let index = transactions.firstIndex(where: { $0.id == id }) {
-                transactions[index] = transaction
-                cached = transactions
-            }
-        }
-
+        try await store.upsert([TransactionRecord(from: transaction)])
         return transaction
     }
 
     public func deleteTransaction(id: String) async throws -> Bool {
         let success = try await client.deleteTransaction(id: id)
-
         if success {
-            // Remove from cache
-            $_cachedTransactions.withLock { cached in
-                cached = cached?.filter { $0.id != id }
-            }
+            try await store.delete(id: id)
         }
-
         return success
     }
 
-    public func clearCache() {
-        $_cachedTransactions.withLock { $0 = nil }
+    public func clearCache() async {
+        do {
+            try await store.clear()
+        } catch {
+            logger.error("clearCache failed: \(error.localizedDescription)")
+        }
         loadAllTask?.cancel()
         loadAllTask = nil
+        UserDefaults.standard.removeObject(forKey: InitialSyncDefaults.completedKey)
+        UserDefaults.standard.removeObject(forKey: InitialSyncDefaults.nextTokenKey)
     }
 }
 

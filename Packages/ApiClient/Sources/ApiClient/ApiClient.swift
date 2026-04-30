@@ -95,7 +95,10 @@ public final class APIClient: APIClienting, @unchecked Sendable {
             variables: CreateTransactionVariables(input: input),
             operationName: "createTransaction"
         )
-        return response.createTransaction
+        guard let dto = response.createTransaction else {
+            throw APIClientError.noData
+        }
+        return dto
     }
 
     public func updateTransaction(id: String, input: UpdateTransactionInput) async throws -> TransactionDTO {

@@ -169,6 +169,20 @@ public struct ProfileView: View {
         .listSectionSpacing(16)
         .contentMargins(.horizontal, 16, for: .scrollContent)
         .navigationTitle("Profile")
+        .background {
+            NavigationLink(
+                isActive: Binding(
+                    get: { newApiKeyId != nil },
+                    set: { if !$0 { newApiKeyId = nil } }
+                )
+            ) {
+                if let apiKeyId = newApiKeyId {
+                    ConnectDeviceOptionsView(apiKeyId: apiKeyId)
+                }
+            } label: {
+                EmptyView()
+            }
+        }
         .task {
             await loadData()
         }
@@ -474,31 +488,42 @@ public struct ProfileView: View {
     private var apiKeysSection: some View {
         Section("Devices") {
             ForEach(apiKeys) { apiKey in
-                HStack {
-                    Image(systemName: "iphone")
-                        .foregroundStyle(.secondary)
-                        .frame(width: 24)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(apiKey.name)
-                            .font(.body)
-                        Text(apiKey.formattedCreatedAt)
-                            .font(.caption)
+                Button {
+                    newApiKeyId = apiKey.id
+                } label: {
+                    HStack {
+                        Image(systemName: "iphone")
                             .foregroundStyle(.secondary)
-                    }
+                            .frame(width: 24)
 
-                    Spacer()
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(apiKey.name)
+                                .font(.body)
+                                .foregroundStyle(.primary)
+                            Text(apiKey.formattedCreatedAt)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
 
-                    if apiKey.isActive {
-                        Text("Active")
+                        Spacer()
+
+                        if apiKey.isActive {
+                            Text("Active")
+                                .font(.caption)
+                                .foregroundStyle(.green)
+                        } else {
+                            Text("Inactive")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Image(systemName: "chevron.right")
                             .font(.caption)
-                            .foregroundStyle(.green)
-                    } else {
-                        Text("Inactive")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.tertiary)
                     }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
 
             Button {
@@ -513,18 +538,6 @@ public struct ProfileView: View {
                 }
             }
             .disabled(isCreatingApiKey)
-
-            NavigationLink(isActive: Binding(
-                get: { newApiKeyId != nil },
-                set: { if !$0 { newApiKeyId = nil } }
-            )) {
-                if let apiKeyId = newApiKeyId {
-                    ConnectDeviceOptionsView(apiKeyId: apiKeyId)
-                }
-            } label: {
-                EmptyView()
-            }
-            .hidden()
         }
     }
 
@@ -573,12 +586,12 @@ public struct ProfileView: View {
                     }
                 }
             } message: {
-                Text("This will clear all cached data. The app will re-download everything on next launch.")
+                Text("This will clear all cached data. The app will re-download as you browse. For a clean re-sync, force-quit and reopen the app.")
             }
             .alert("Cache Cleared", isPresented: $showCacheResetSuccess) {
                 Button("OK", role: .cancel) {}
             } message: {
-                Text("All cached data has been cleared.")
+                Text("All cached data has been cleared. Force-quit and reopen the app to re-download from scratch.")
             }
 
             Button(role: .destructive) {
@@ -826,95 +839,4 @@ private struct SingleSelectView<Option: Identifiable & RawRepresentable>: View w
     }
 }
 
-// MARK: - Currency Select View
-
-private struct CurrencySelectView: View {
-    let selected: String?
-    let onUpdate: (String?) async -> Void
-
-    @State private var localSelected: String?
-    @State private var searchText = ""
-    @State private var isUpdating = false
-
-    init(selected: String?, onUpdate: @escaping (String?) async -> Void) {
-        self.selected = selected
-        self.onUpdate = onUpdate
-        self._localSelected = State(initialValue: selected)
-    }
-
-    private var groupedCurrencies: [String: [Currency]] {
-        Dictionary(grouping: filteredCurrencies) { $0.continent }
-    }
-
-    private var sortedContinents: [String] {
-        let order = ["North America", "South America", "Europe", "Middle East", "Asia", "Oceania", "Africa"]
-        return groupedCurrencies.keys.sorted { lhs, rhs in
-            let lhsIndex = order.firstIndex(of: lhs) ?? Int.max
-            let rhsIndex = order.firstIndex(of: rhs) ?? Int.max
-            return lhsIndex < rhsIndex
-        }
-    }
-
-    private var filteredCurrencies: [Currency] {
-        if searchText.isEmpty {
-            return Currency.allCurrencies
-        }
-        return Currency.allCurrencies.filter {
-            $0.label.localizedCaseInsensitiveContains(searchText) ||
-            $0.id.localizedCaseInsensitiveContains(searchText) ||
-            $0.continent.localizedCaseInsensitiveContains(searchText)
-        }
-    }
-
-    var body: some View {
-        List {
-            ForEach(sortedContinents, id: \.self) { continent in
-                Section(continent) {
-                    ForEach(groupedCurrencies[continent] ?? []) { currency in
-                        let isSelected = localSelected == currency.id
-                        Button {
-                            localSelected = currency.id
-                            Task {
-                                isUpdating = true
-                                await onUpdate(currency.id)
-                                isUpdating = false
-                            }
-                        } label: {
-                            HStack {
-                                Text(currency.emoji)
-                                Text(currency.label)
-
-                                Spacer()
-
-                                Text(currency.id)
-                                    .foregroundStyle(.secondary)
-
-                                if isSelected {
-                                    Image(systemName: "checkmark")
-                                        .foregroundStyle(.blue)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(.primary)
-                        .disabled(isUpdating)
-                    }
-                }
-            }
-        }
-        .listStyle(.insetGrouped)
-        .navigationTitle("Currency")
-        .searchable(text: $searchText, prompt: "Search currencies")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if isUpdating {
-                    ProgressView()
-                }
-            }
-        }
-        .onChange(of: selected) { _, newValue in
-            localSelected = newValue
-        }
-    }
-}
+// CurrencySelectView lives in the UI package — see Packages/UI/Sources/UI/CurrencySelectView.swift

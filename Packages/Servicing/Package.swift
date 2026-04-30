@@ -17,6 +17,7 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.0.0"),
         .package(path: "../APIClient"),
+        .package(path: "../Database"),
     ],
     targets: [
         .target(
@@ -25,6 +26,7 @@ let package = Package(
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "Sharing", package: "swift-sharing"),
                 .product(name: "ApiClient", package: "APIClient"),
+                "Database",
             ]
         ),
         .testTarget(

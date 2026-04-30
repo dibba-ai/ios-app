@@ -15,7 +15,8 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "UI"),
+            name: "UI"
+        ),
         .testTarget(
             name: "UITests",
             dependencies: ["UI"]

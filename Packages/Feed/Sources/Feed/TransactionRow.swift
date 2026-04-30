@@ -124,6 +124,9 @@ public struct TransactionRow: View {
         if transaction.isTransfer {
             parts.append("Transfer")
         }
+        if parts.isEmpty, transaction.metadata?.type == "manual" {
+            parts.append("Manual")
+        }
         return parts.joined(separator: " · ")
     }
 

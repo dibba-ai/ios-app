@@ -1,22 +1,36 @@
+import Dependencies
+import os.log
 import Servicing
 import SwiftUI
+
+private let logger = Logger(subsystem: "ai.dibba.ios", category: "TransactionDetailDrawer")
 
 // MARK: - Transaction Detail Drawer
 
 public struct TransactionDetailDrawer: View {
     public let transactions: [Servicing.Transaction]
     @Binding var currentIndex: Int
+    public let onDeleted: ((String) -> Void)?
 
-    public init(transactions: [Servicing.Transaction], currentIndex: Binding<Int>) {
+    public init(
+        transactions: [Servicing.Transaction],
+        currentIndex: Binding<Int>,
+        onDeleted: ((String) -> Void)? = nil
+    ) {
         self.transactions = transactions
         self._currentIndex = currentIndex
+        self.onDeleted = onDeleted
     }
 
+    @Environment(\.dismiss) private var dismiss
+    @Dependency(\.transactionService) private var transactionService
     @State private var dragOffset: CGFloat = 0
     @State private var isDraggingHorizontally = false
     @State private var directionDecided = false
     @State private var showBoundaryBanner = false
     @State private var boundaryMessage = ""
+    @State private var showDeleteConfirm = false
+    @State private var isDeleting = false
 
     public var body: some View {
         NavigationStack {
@@ -60,8 +74,45 @@ public struct TransactionDetailDrawer: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(role: .destructive) {
+                        showDeleteConfirm = true
+                    } label: {
+                        if isDeleting {
+                            ProgressView()
+                        } else {
+                            Image(systemName: "trash")
+                                .foregroundStyle(.red)
+                        }
+                    }
+                    .disabled(isDeleting || transactions.isEmpty)
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .alert("Delete Transaction?", isPresented: $showDeleteConfirm) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) {
+                    Task { await performDelete() }
+                }
+            } message: {
+                Text("This action cannot be undone.")
+            }
+        }
+    }
+
+    // MARK: - Delete
+
+    private func performDelete() async {
+        guard currentIndex < transactions.count else { return }
+        let id = transactions[currentIndex].id
+        isDeleting = true
+        defer { isDeleting = false }
+        do {
+            _ = try await transactionService.deleteTransaction(id: id)
+            onDeleted?(id)
+            dismiss()
+        } catch {
+            logger.error("deleteTransaction failed: \(error.localizedDescription)")
         }
     }
 

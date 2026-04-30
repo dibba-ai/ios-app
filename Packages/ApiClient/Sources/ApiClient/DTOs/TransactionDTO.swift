@@ -91,24 +91,43 @@ public struct CreateTransactionInput: Encodable, Sendable {
     public let name: String
     public let amount: Double
     public let currency: String
-    public let text: String?
-    public let from: String?
-    public let location: String?
+    public let isCredit: Bool
+    public let isDebit: Bool
+    public let isAtm: Bool
+    public let isPurchase: Bool
+    public let isTransfer: Bool
+    public let fullDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case name, amount, currency
+        case isCredit = "is_credit"
+        case isDebit = "is_debit"
+        case isAtm = "is_atm"
+        case isPurchase = "is_purchase"
+        case isTransfer = "is_transfer"
+        case fullDate = "full_date"
+    }
 
     public init(
         name: String,
         amount: Double,
         currency: String,
-        text: String? = nil,
-        from: String? = nil,
-        location: String? = nil
+        isCredit: Bool,
+        isDebit: Bool,
+        isAtm: Bool,
+        isPurchase: Bool,
+        isTransfer: Bool,
+        fullDate: String
     ) {
         self.name = name
         self.amount = amount
         self.currency = currency
-        self.text = text
-        self.from = from
-        self.location = location
+        self.isCredit = isCredit
+        self.isDebit = isDebit
+        self.isAtm = isAtm
+        self.isPurchase = isPurchase
+        self.isTransfer = isTransfer
+        self.fullDate = fullDate
     }
 }
 
@@ -121,7 +140,7 @@ public struct CreateTransactionVariables: Encodable, Sendable {
 }
 
 public struct CreateTransactionResponse: Codable, Sendable {
-    public let createTransaction: TransactionDTO
+    public let createTransaction: TransactionDTO?
 }
 
 // MARK: - Update Transaction

@@ -30,8 +30,8 @@ public final class TabBarCoordinator: CompositionCoordinating {
         logger.debug("Creating DashboardView")
         let dashboardNav = makeNavController(
             root: DashboardView().wrapped(),
-            title: "Dashboard",
-            systemImage: "house.fill"
+            title: "Today",
+            systemImage: "sun.max.fill"
         )
 
         logger.debug("Creating FeedView")
