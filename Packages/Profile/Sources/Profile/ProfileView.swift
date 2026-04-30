@@ -169,6 +169,12 @@ public struct ProfileView: View {
         .listSectionSpacing(16)
         .contentMargins(.horizontal, 16, for: .scrollContent)
         .navigationTitle("Profile")
+        .sheet(isPresented: $showDebugMenu) {
+            DebugMenuView(profile: profile, authUser: authUser)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showProfileDebugMenu)) { _ in
+            showDebugMenu = true
+        }
         .background {
             NavigationLink(
                 isActive: Binding(
@@ -202,15 +208,15 @@ public struct ProfileView: View {
     @Dependency(\.apiKeyService) private var apiKeyService
 
     @State private var profile: Servicing.Profile?
+    @State private var authUser: AuthUser?
     @State private var apiKeys: [Servicing.ApiKey] = []
     @State private var isLoadingProfile = false
     @State private var isUpdating = false
     @State private var showLogoutConfirmation = false
     @State private var showDeleteAccountConfirmation = false
-    @State private var showCacheResetConfirmation = false
-    @State private var showCacheResetSuccess = false
     @State private var isCreatingApiKey = false
     @State private var newApiKeyId: String?
+    @State private var showDebugMenu = false
 
     private let onLogout: (() -> Void)?
 
@@ -229,12 +235,15 @@ public struct ProfileView: View {
             logger.error("Profile loading failed: \(error.localizedDescription)")
         }
 
+        authUser = await authService.currentUser
+
         do {
             apiKeys = try await apiKeyService.getApiKeys(force: force)
         } catch {
             logger.error("API keys loading failed: \(error.localizedDescription)")
         }
     }
+
 
     private func updateProfile(_ input: UpdateProfileInput) async {
         logger.info("updateProfile called with input")
@@ -561,37 +570,9 @@ public struct ProfileView: View {
     private var actionsSection: some View {
         Section("Actions") {
             Button {
-                if let url = URL(string: "mailto:support@dibba.ai") {
-                    UIApplication.shared.open(url)
-                }
+                openSupportMail(subject: "Support Request")
             } label: {
                 Label("Contact Support", systemImage: "envelope")
-            }
-
-            Button {
-                showCacheResetConfirmation = true
-            } label: {
-                Label("Reset Cache", systemImage: "arrow.triangle.2.circlepath")
-            }
-            .alert("Reset Cache", isPresented: $showCacheResetConfirmation) {
-                Button("Cancel", role: .cancel) {}
-                Button("Reset", role: .destructive) {
-                    Task {
-                        await transactionService.clearCache()
-                        await targetService.clearCache()
-                        await reportService.clearCache()
-                        await profileService.clearCache()
-                        await apiKeyService.clearCache()
-                        showCacheResetSuccess = true
-                    }
-                }
-            } message: {
-                Text("This will clear all cached data. The app will re-download as you browse. For a clean re-sync, force-quit and reopen the app.")
-            }
-            .alert("Cache Cleared", isPresented: $showCacheResetSuccess) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("All cached data has been cleared. Force-quit and reopen the app to re-download from scratch.")
             }
 
             Button(role: .destructive) {
@@ -603,9 +584,7 @@ public struct ProfileView: View {
             .alert("Delete Account", isPresented: $showDeleteAccountConfirmation) {
                 Button("Cancel", role: .cancel) {}
                 Button("Delete Account", role: .destructive) {
-                    if let url = URL(string: "mailto:support@dibba.ai?subject=Delete%20My%20Account") {
-                        UIApplication.shared.open(url)
-                    }
+                    openSupportMail(subject: "Delete My Account")
                 }
             } message: {
                 Text("This will send a request to delete your account and all associated data. This action cannot be undone.")
@@ -636,6 +615,79 @@ public struct ProfileView: View {
         formatter.timeStyle = .none
         return formatter.string(from: date)
     }
+
+    private func openSupportMail(subject: String) {
+        let body = supportMailBody()
+        let allowed = CharacterSet.urlQueryAllowed
+        guard
+            let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: allowed),
+            let encodedBody = body.addingPercentEncoding(withAllowedCharacters: allowed),
+            let url = URL(string: "mailto:support@dibba.ai?subject=\(encodedSubject)&body=\(encodedBody)")
+        else { return }
+        UIApplication.shared.open(url)
+    }
+
+    private func supportMailBody() -> String {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime]
+
+        func format(_ date: Date?) -> String {
+            guard let date else { return "—" }
+            return isoFormatter.string(from: date)
+        }
+
+        let bundle = Bundle.main
+        let version = bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+        let build = bundle.infoDictionary?["CFBundleVersion"] as? String ?? "—"
+
+        let device = UIDevice.current
+        let locale = Locale.current
+        let country = locale.region?.identifier ?? "—"
+        let localeId = locale.identifier
+        let language = locale.language.languageCode?.identifier ?? "—"
+        let currency = locale.currency?.identifier ?? "—"
+        let appLanguage = Locale.preferredLanguages.first ?? "—"
+        let timeZone = TimeZone.current.identifier
+        let gmtOffsetSeconds = TimeZone.current.secondsFromGMT()
+        let gmtOffsetHours = Double(gmtOffsetSeconds) / 3600
+        let gmtOffset = String(format: "GMT%+.2f", gmtOffsetHours)
+
+        var lines: [String] = []
+        lines.append("")
+        lines.append("")
+        lines.append("---")
+        lines.append("User / App Information")
+        lines.append("---")
+        lines.append("User ID: \(authUser?.id ?? "—")")
+        lines.append("Email: \(authUser?.email ?? profile?.email ?? "—")")
+        lines.append("Name: \(authUser?.name ?? profile?.name ?? "—")")
+        lines.append("Created At: \(format(profile?.createdAt))")
+        lines.append("Plan: \(profile?.plan.rawValue ?? "—")")
+        lines.append("Plan Starts At: \(format(profile?.planStartsAt))")
+        lines.append("Plan Expires At: \(format(profile?.planExpiresAt))")
+        lines.append("App Version: \(version)")
+        lines.append("App Build: \(build)")
+        lines.append("Device: \(device.model) (\(Self.hardwareIdentifier))")
+        lines.append("OS: \(device.systemName) \(device.systemVersion)")
+        lines.append("Country: \(country)")
+        lines.append("Locale: \(localeId)")
+        lines.append("Language: \(language)")
+        lines.append("Currency: \(currency)")
+        lines.append("App Language: \(appLanguage)")
+        lines.append("Timezone: \(timeZone) (\(gmtOffset))")
+        return lines.joined(separator: "\n")
+    }
+
+    private static let hardwareIdentifier: String = {
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let mirror = Mirror(reflecting: systemInfo.machine)
+        let identifier = mirror.children.reduce("") { partial, element in
+            guard let value = element.value as? Int8, value != 0 else { return partial }
+            return partial + String(UnicodeScalar(UInt8(value)))
+        }
+        return identifier.isEmpty ? "—" : identifier
+    }()
 
     private func formatSelected<T: RawRepresentable & CaseIterable>(_ selected: [String], from type: T.Type) -> String where T.RawValue == String, T: Identifiable {
         guard !selected.isEmpty else { return "None" }
@@ -840,3 +892,143 @@ private struct SingleSelectView<Option: Identifiable & RawRepresentable>: View w
 }
 
 // CurrencySelectView lives in the UI package — see Packages/UI/Sources/UI/CurrencySelectView.swift
+
+public extension Notification.Name {
+    static let showProfileDebugMenu = Notification.Name("ai.dibba.showProfileDebugMenu")
+}
+
+// MARK: - Debug Menu View
+
+private struct DebugMenuView: View {
+    let profile: Servicing.Profile?
+    let authUser: AuthUser?
+
+    @Environment(\.dismiss) private var dismiss
+    @Dependency(\.profileService) private var profileService
+    @Dependency(\.transactionService) private var transactionService
+    @Dependency(\.targetService) private var targetService
+    @Dependency(\.reportService) private var reportService
+    @Dependency(\.apiKeyService) private var apiKeyService
+    @State private var profileJSONExpanded = false
+    @State private var copiedLabel: String?
+    @State private var showCacheResetConfirmation = false
+    @State private var showCacheResetSuccess = false
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("User") {
+                    copyRow("ID", value: authUser?.id ?? "—")
+                    copyRow("Email", value: authUser?.email ?? profile?.email ?? "—")
+                    copyRow("Name", value: authUser?.name ?? profile?.name ?? "—")
+                }
+
+                Section("Profile JSON") {
+                    DisclosureGroup("Show full profile", isExpanded: $profileJSONExpanded) {
+                        Button {
+                            copy(profileJSON, label: "Profile JSON")
+                        } label: {
+                            ScrollView(.horizontal, showsIndicators: true) {
+                                Text(profileJSON)
+                                    .font(.system(.footnote, design: .monospaced))
+                                    .padding(.vertical, 4)
+                                    .foregroundStyle(.primary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                Section("Cache") {
+                    Button {
+                        showCacheResetConfirmation = true
+                    } label: {
+                        Label("Reset Cache", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                    .alert("Reset Cache", isPresented: $showCacheResetConfirmation) {
+                        Button("Cancel", role: .cancel) {}
+                        Button("Reset", role: .destructive) {
+                            Task {
+                                await transactionService.clearCache()
+                                await targetService.clearCache()
+                                await reportService.clearCache()
+                                await profileService.clearCache()
+                                await apiKeyService.clearCache()
+                                showCacheResetSuccess = true
+                            }
+                        }
+                    } message: {
+                        Text("This will clear all cached data. The app will re-download as you browse. For a clean re-sync, force-quit and reopen the app.")
+                    }
+                    .alert("Cache Cleared", isPresented: $showCacheResetSuccess) {
+                        Button("OK", role: .cancel) {}
+                    } message: {
+                        Text("All cached data has been cleared. Force-quit and reopen the app to re-download from scratch.")
+                    }
+                }
+            }
+            .navigationTitle("Debug")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if let copiedLabel {
+                    Text("Copied: \(copiedLabel)")
+                        .font(.subheadline.weight(.medium))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .padding(.bottom, 24)
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func copyRow(_ label: String, value: String) -> some View {
+        Button {
+            copy(value, label: label)
+        } label: {
+            HStack {
+                Text(label).foregroundStyle(.primary)
+                Spacer()
+                Text(value)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func copy(_ value: String, label: String) {
+        UIPasteboard.general.string = value
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        withAnimation(.easeOut(duration: 0.2)) {
+            copiedLabel = label
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            withAnimation(.easeOut(duration: 0.3)) {
+                copiedLabel = nil
+            }
+        }
+    }
+
+    private var profileJSON: String {
+        guard let profile else { return "{}" }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        if let data = try? encoder.encode(profile),
+           let string = String(data: data, encoding: .utf8) {
+            return string
+        }
+        return "{}"
+    }
+}

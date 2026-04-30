@@ -10,12 +10,13 @@ import UIKit
 private let logger = Logger(subsystem: "ai.dibba.ios", category: "TabBarCoordinator")
 
 @MainActor
-public final class TabBarCoordinator: CompositionCoordinating {
+public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBarControllerDelegate {
     // MARK: Lifecycle
 
     public init(onLogout: (() -> Void)? = nil) {
         logger.debug("init")
         self.onLogout = onLogout
+        super.init()
     }
 
     // MARK: Public
@@ -47,6 +48,7 @@ public final class TabBarCoordinator: CompositionCoordinating {
             title: "Profile",
             systemImage: "person.fill"
         )
+        self.profileNav = profileNav
 
         tabBarController.viewControllers = [
             feedNav,
@@ -54,6 +56,7 @@ public final class TabBarCoordinator: CompositionCoordinating {
             profileNav,
         ]
         tabBarController.selectedIndex = 1
+        tabBarController.delegate = self
         logger.info("Tab bar setup complete")
     }
 
@@ -61,9 +64,40 @@ public final class TabBarCoordinator: CompositionCoordinating {
         remove(coordinator)
     }
 
+    public nonisolated func tabBarController(
+        _ tabBarController: UITabBarController,
+        shouldSelect viewController: UIViewController
+    ) -> Bool {
+        Task { @MainActor in
+            self.handleProfileTap(viewController: viewController)
+        }
+        return true
+    }
+
     // MARK: Private
 
     private let onLogout: (() -> Void)?
+    private weak var profileNav: UINavigationController?
+    private var profileTapCount = 0
+    private var profileLastTapAt: Date = .distantPast
+
+    private func handleProfileTap(viewController: UIViewController) {
+        guard viewController === profileNav else {
+            profileTapCount = 0
+            return
+        }
+        let now = Date()
+        if now.timeIntervalSince(profileLastTapAt) > 2 {
+            profileTapCount = 1
+        } else {
+            profileTapCount += 1
+        }
+        profileLastTapAt = now
+        if profileTapCount >= 10 {
+            profileTapCount = 0
+            NotificationCenter.default.post(name: .showProfileDebugMenu, object: nil)
+        }
+    }
 
     private func makeNavController(
         root: UIViewController,
