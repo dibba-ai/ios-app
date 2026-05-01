@@ -1,8 +1,6 @@
 //
 //  AnalyticsEvent.swift
-//  Core
-//
-//  Created by Klim on 10/11/25.
+//  Analytics
 //
 
 import Foundation
@@ -79,4 +77,3 @@ public enum AnalyticsEvent: String, Codable, Sendable {
     case faqItemOpened = "FAQ_ITEM_OPENED"
     case faqItemClosed = "FAQ_ITEM_CLOSED"
 }
-

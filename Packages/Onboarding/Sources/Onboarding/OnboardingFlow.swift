@@ -21,12 +21,14 @@ public final class OnboardingFlow: NavigationFlowCoordinating {
     public let rootNavigationController: UINavigationController
 
     public func start() {
-        let view = OnboardingScreen {
+        let viewModel = OnboardingViewModel { [weak self] in
+            guard let self else { return }
             self.finish()
             self.onFinish()
         }
+        let host = OnboardingHostView(viewModel: viewModel)
         rootNavigationController.setViewControllers(
-            [view.wrapped(hideNavBar: true)],
+            [host.wrapped(hideNavBar: true)],
             animated: true
         )
     }
@@ -38,17 +40,4 @@ public final class OnboardingFlow: NavigationFlowCoordinating {
     // MARK: Private
 
     private let onFinish: () -> Void
-}
-
-private struct OnboardingScreen: View {
-    var onFinish: () -> Void
-
-    var body: some View {
-        VStack(spacing: 24) {
-            OnboardingView()
-            Button("Finish Onboarding") { onFinish() }
-                .buttonStyle(.borderedProminent)
-        }
-        .padding()
-    }
 }

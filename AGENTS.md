@@ -42,14 +42,18 @@ xcodebuild
 - **Tuist-based project**: Uses Tuist for project generation and modular architecture
 - **Swift Package modules**: Features are separated into individual packages in the `Packages/` directory:
   - ApiClient - API communication, network
-  - Auth - User authentication and session management 
-  - Dashboard - Main Dashboard page components
+  - Auth - User authentication and session management
   - Core - Shared utilities and core functionality
+  - Dashboard - Main Dashboard page components
+  - Database - GRDB-backed local cache (transactions, sync cursors); mirror of server state
+  - Debug - Debug-only screens and tooling (gated easter-egg entry)
   - Feed - Feed page functionality
   - Navigation - App navigation and routing
   - Onboarding - User onboarding flows
   - Profile - Profile and Settings page functionality
-  - Servicing - Service layer abstractions
+  - Servicing - Service layer abstractions (wraps ApiClient + Database)
+  - State - Shared app-level state primitives
+  - UI - Shared SwiftUI components and design tokens
   - Auth0 - External package handles tokens via Auth0
 - **MVVM with SwiftUI**: View models use `@Observable` for state management
 - **Dependency injection**: Services are injected through protocols
@@ -100,8 +104,11 @@ TODO: add UX flow
 
 ## Data Management and GraphQL API
 
-- Graphql API is the **sole source of truth** for all user data. The mobile app is a thin client — no local database, only cache
-- Prefer incremental cache-sync strategies over force-refresh/full-reload approaches for data fetching. 
+- GraphQL API is the **sole source of truth** for all user data. The mobile app is a thin client.
+- **Local database (GRDB) is used as a cache layer only.** Persisted via the `Database` package (`Packages/Database/`) and accessed through `Servicing` services (e.g., `transactionStore`). It mirrors a subset of server data for offline reads, fast pagination, and reactive UI via change observation. The DB never holds user-authored state that doesn't exist on the server — invalidation/refresh always reconciles against GraphQL.
+- Treat the local DB as **derived state**: any record can be evicted and re-fetched without data loss. If a feature needs durable client-only state, propose a server-side schema first.
+- `UserDefaults` is allowed for ephemeral flags only (sync cursors, onboarding flags, last-selected pickers) — never for entity data.
+- Prefer incremental cache-sync strategies over force-refresh/full-reload approaches for data fetching.
 - Always propose the least disruptive data update pattern first.
 - **Token flow**: Auth0 token used to authenticate
 

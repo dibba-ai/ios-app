@@ -61,6 +61,11 @@ final class AppCoordinator: NavigationFlowCoordinating {
             // Check current auth status
             await authService.checkAuthenticationStatus()
 
+            // Drive onboarding state from server-side profile presence
+            if accountManager.isSignedIn {
+                await evaluateOnboardingFromProfile()
+            }
+
             // Get account state and navigate accordingly
             let state = await accountManager.state
             logger.info("Initial account state: \(String(describing: state))")
@@ -116,6 +121,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
                 guard let self else { return }
 
                 Task {
+                    await self.evaluateOnboardingFromProfile()
                     let state = await self.accountManager.state
                     await MainActor.run {
                         self.navigateToState(state)
@@ -190,6 +196,25 @@ final class AppCoordinator: NavigationFlowCoordinating {
             logger.info("Profile preloaded")
         } catch {
             logger.warning("Profile preload failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Inspect the server-side profile to decide whether onboarding is needed.
+    /// Marks onboarding complete (or resets it) based on `Profile.isOnboardingComplete`.
+    /// On fetch failure, leaves the cached flag unchanged so users without connectivity
+    /// keep the previously known state.
+    private func evaluateOnboardingFromProfile() async {
+        do {
+            let profile = try await profileService.getProfile(force: false)
+            if profile.isOnboardingComplete {
+                logger.info("Profile complete — marking onboarding finished")
+                accountManager.markOnboardingComplete()
+            } else {
+                logger.info("Profile incomplete — routing to onboarding")
+                accountManager.resetOnboardingState()
+            }
+        } catch {
+            logger.warning("Profile fetch failed during onboarding eval: \(error.localizedDescription) — keeping cached flag")
         }
     }
 

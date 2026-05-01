@@ -1,4 +1,5 @@
 import Auth
+import Debug
 import Dependencies
 import Feed
 import Navigation
@@ -80,6 +81,7 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
     private weak var profileNav: UINavigationController?
     private var profileTapCount = 0
     private var profileLastTapAt: Date = .distantPast
+    private var debugFlow: DebugFlow?
 
     private func handleProfileTap(viewController: UIViewController) {
         guard viewController === profileNav else {
@@ -95,8 +97,19 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         profileLastTapAt = now
         if profileTapCount >= 10 {
             profileTapCount = 0
-            NotificationCenter.default.post(name: .showProfileDebugMenu, object: nil)
+            presentDebugFlow()
         }
+    }
+
+    private func presentDebugFlow() {
+        guard debugFlow == nil else { return }
+        let flow = DebugFlow(
+            presenter: tabBarController,
+            onLogout: onLogout,
+            onDismiss: { [weak self] in self?.debugFlow = nil }
+        )
+        debugFlow = flow
+        flow.start()
     }
 
     private func makeNavController(

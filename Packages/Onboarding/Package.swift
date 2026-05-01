@@ -9,7 +9,6 @@ let package = Package(
         .iOS(.v17)
     ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "Onboarding",
             targets: ["Onboarding"]
@@ -17,14 +16,24 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../Navigation"),
+        .package(path: "../Core"),
+        .package(path: "../Analytics"),
+        .package(path: "../ApiClient"),
+        .package(path: "../Servicing"),
+        .package(path: "../UI"),
+        .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "Onboarding",
             dependencies: [
                 "Navigation",
+                "Core",
+                "Analytics",
+                "ApiClient",
+                "Servicing",
+                "UI",
+                .product(name: "Dependencies", package: "swift-dependencies"),
             ]
         ),
         .testTarget(

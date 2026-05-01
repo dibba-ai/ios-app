@@ -237,9 +237,27 @@ public extension Profile {
         return email
     }
 
+    /// Same as `displayName` but never falls back to email — returns nil when no
+    /// real name is on the profile. Use for cosmetic surfaces like greetings.
+    var greetingName: String? {
+        if !name.isEmpty { return name }
+        let combined = "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
+        return combined.isEmpty ? nil : combined
+    }
+
     var pictureURL: URL? {
         guard let picture else { return nil }
         return URL(string: picture)
+    }
+
+    /// True when all 6 onboarding answers are present (matches web onboarding completion).
+    var isOnboardingComplete: Bool {
+        !goals.isEmpty
+            && !occupation.isEmpty
+            && !housing.isEmpty
+            && !transport.isEmpty
+            && currency != nil
+            && age != nil
     }
 }
 

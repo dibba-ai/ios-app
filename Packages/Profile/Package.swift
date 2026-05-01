@@ -17,6 +17,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../Auth"),
+        .package(path: "../Core"),
         .package(path: "../Servicing"),
         .package(path: "../ApiClient"),
         .package(path: "../UI"),
@@ -24,7 +25,7 @@ let package = Package(
     targets: [
         .target(
             name: "Profile",
-            dependencies: ["Auth", "Servicing", "ApiClient", "UI"]
+            dependencies: ["Auth", "Core", "Servicing", "ApiClient", "UI"]
         ),
         .testTarget(
             name: "ProfileTests",

@@ -14,7 +14,7 @@ public struct DashboardView: View {
         let _ = logger.debug("body rendered")
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                GreetingView(name: isLoading ? "placeholder" : profile?.displayName)
+                GreetingView(name: isLoading ? "placeholder" : profile?.greetingName)
                     .redacted(reason: isLoading ? .placeholder : [])
                     .padding(.horizontal)
 
