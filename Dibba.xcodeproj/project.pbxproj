@@ -37,9 +37,9 @@
 /* Begin PBXFileReference section */
 		4D1C71302F338D7600261113 /* Auth0.plist */ = {isa = PBXFileReference; lastKnownFileType = text; path = Auth0.plist; sourceTree = "<group>"; };
 		4D1FEB9A2F52F69000D21C61 /* Dibba.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = Dibba.icon; sourceTree = "<group>"; };
-		4D5A40742E9A5FC800A0755C /* ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		4D5A40852E9A5FCA00A0755C /* iosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		4D5A408F2E9A5FCA00A0755C /* iosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D5A40742E9A5FC800A0755C /* Dibba.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dibba.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D5A40852E9A5FCA00A0755C /* DibbaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DibbaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D5A408F2E9A5FCA00A0755C /* DibbaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DibbaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D5A40A22E9A5FD900A0755C /* Core */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Core; sourceTree = "<group>"; };
 		4D5A40A32E9A5FD900A0755C /* Data */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Data; sourceTree = "<group>"; };
 		4D5A40A42E9A5FD900A0755C /* Features */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Features; sourceTree = "<group>"; };
@@ -112,9 +112,9 @@
 		4D5A40752E9A5FC800A0755C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4D5A40742E9A5FC800A0755C /* ios.app */,
-				4D5A40852E9A5FCA00A0755C /* iosTests.xctest */,
-				4D5A408F2E9A5FCA00A0755C /* iosUITests.xctest */,
+				4D5A40742E9A5FC800A0755C /* Dibba.app */,
+				4D5A40852E9A5FCA00A0755C /* DibbaTests.xctest */,
+				4D5A408F2E9A5FCA00A0755C /* DibbaUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -134,9 +134,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4D5A40732E9A5FC800A0755C /* ios */ = {
+		4D5A40732E9A5FC800A0755C /* Dibba */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4D5A40992E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "ios" */;
+			buildConfigurationList = 4D5A40992E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "Dibba" */;
 			buildPhases = (
 				4D5A40702E9A5FC800A0755C /* Sources */,
 				4D5A40712E9A5FC800A0755C /* Frameworks */,
@@ -149,7 +149,7 @@
 			fileSystemSynchronizedGroups = (
 				4D5A40762E9A5FC800A0755C /* ios */,
 			);
-			name = ios;
+			name = Dibba;
 			packageProductDependencies = (
 				4D6EFDCC2F01145100D21EB9 /* Dashboard */,
 				4D6EFDCF2F01147100D21EB9 /* Feed */,
@@ -159,12 +159,12 @@
 				4D6EFDDB2F0114C000D21EB9 /* Profile */,
 			);
 			productName = ios;
-			productReference = 4D5A40742E9A5FC800A0755C /* ios.app */;
+			productReference = 4D5A40742E9A5FC800A0755C /* Dibba.app */;
 			productType = "com.apple.product-type.application";
 		};
-		4D5A40842E9A5FCA00A0755C /* iosTests */ = {
+		4D5A40842E9A5FCA00A0755C /* DibbaTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4D5A409C2E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "iosTests" */;
+			buildConfigurationList = 4D5A409C2E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "DibbaTests" */;
 			buildPhases = (
 				4D5A40812E9A5FCA00A0755C /* Sources */,
 				4D5A40822E9A5FCA00A0755C /* Frameworks */,
@@ -178,16 +178,16 @@
 			fileSystemSynchronizedGroups = (
 				4D5A40882E9A5FCA00A0755C /* iosTests */,
 			);
-			name = iosTests;
+			name = DibbaTests;
 			packageProductDependencies = (
 			);
 			productName = iosTests;
-			productReference = 4D5A40852E9A5FCA00A0755C /* iosTests.xctest */;
+			productReference = 4D5A40852E9A5FCA00A0755C /* DibbaTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		4D5A408E2E9A5FCA00A0755C /* iosUITests */ = {
+		4D5A408E2E9A5FCA00A0755C /* DibbaUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4D5A409F2E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "iosUITests" */;
+			buildConfigurationList = 4D5A409F2E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "DibbaUITests" */;
 			buildPhases = (
 				4D5A408B2E9A5FCA00A0755C /* Sources */,
 				4D5A408C2E9A5FCA00A0755C /* Frameworks */,
@@ -201,11 +201,11 @@
 			fileSystemSynchronizedGroups = (
 				4D5A40922E9A5FCA00A0755C /* iosUITests */,
 			);
-			name = iosUITests;
+			name = DibbaUITests;
 			packageProductDependencies = (
 			);
 			productName = iosUITests;
-			productReference = 4D5A408F2E9A5FCA00A0755C /* iosUITests.xctest */;
+			productReference = 4D5A408F2E9A5FCA00A0755C /* DibbaUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -231,7 +231,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 4D5A406F2E9A5FC800A0755C /* Build configuration list for PBXProject "ios" */;
+			buildConfigurationList = 4D5A406F2E9A5FC800A0755C /* Build configuration list for PBXProject "Dibba" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -256,9 +256,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4D5A40732E9A5FC800A0755C /* ios */,
-				4D5A40842E9A5FCA00A0755C /* iosTests */,
-				4D5A408E2E9A5FCA00A0755C /* iosUITests */,
+				4D5A40732E9A5FC800A0755C /* Dibba */,
+				4D5A40842E9A5FCA00A0755C /* DibbaTests */,
+				4D5A408E2E9A5FCA00A0755C /* DibbaUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -316,12 +316,12 @@
 /* Begin PBXTargetDependency section */
 		4D5A40872E9A5FCA00A0755C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4D5A40732E9A5FC800A0755C /* ios */;
+			target = 4D5A40732E9A5FC800A0755C /* Dibba */;
 			targetProxy = 4D5A40862E9A5FCA00A0755C /* PBXContainerItemProxy */;
 		};
 		4D5A40912E9A5FCA00A0755C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4D5A40732E9A5FC800A0755C /* ios */;
+			target = 4D5A40732E9A5FC800A0755C /* Dibba */;
 			targetProxy = 4D5A40902E9A5FCA00A0755C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -467,7 +467,6 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -511,7 +510,6 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -547,7 +545,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ios.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ios";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dibba.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Dibba";
 				XROS_DEPLOYMENT_TARGET = 2.1;
 			};
 			name = Debug;
@@ -570,7 +568,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ios.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ios";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dibba.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Dibba";
 				XROS_DEPLOYMENT_TARGET = 2.1;
 			};
 			name = Release;
@@ -622,7 +620,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4D5A406F2E9A5FC800A0755C /* Build configuration list for PBXProject "ios" */ = {
+		4D5A406F2E9A5FC800A0755C /* Build configuration list for PBXProject "Dibba" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4D5A40972E9A5FCA00A0755C /* Debug */,
@@ -631,7 +629,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4D5A40992E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "ios" */ = {
+		4D5A40992E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "Dibba" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4D5A409A2E9A5FCA00A0755C /* Debug */,
@@ -640,7 +638,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4D5A409C2E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "iosTests" */ = {
+		4D5A409C2E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "DibbaTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4D5A409D2E9A5FCA00A0755C /* Debug */,
@@ -649,7 +647,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4D5A409F2E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "iosUITests" */ = {
+		4D5A409F2E9A5FCA00A0755C /* Build configuration list for PBXNativeTarget "DibbaUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4D5A40A02E9A5FCA00A0755C /* Debug */,
