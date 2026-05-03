@@ -15,6 +15,7 @@
 		4D6EFDD62F01149900D21EB9 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 4D6EFDD52F01149900D21EB9 /* Auth */; };
 		4D6EFDD92F0114AE00D21EB9 /* Onboarding in Frameworks */ = {isa = PBXBuildFile; productRef = 4D6EFDD82F0114AE00D21EB9 /* Onboarding */; };
 		4D6EFDDC2F0114C000D21EB9 /* Profile in Frameworks */ = {isa = PBXBuildFile; productRef = 4D6EFDDB2F0114C000D21EB9 /* Profile */; };
+		4D80C4D82FA5F35700C10C05 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D80C4D72FA5F35700C10C05 /* StoreKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +46,7 @@
 		4D5A40A42E9A5FD900A0755C /* Features */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Features; sourceTree = "<group>"; };
 		4D5A40A52E9A5FD900A0755C /* State */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = State; sourceTree = "<group>"; };
 		4D5A40A62E9A5FD900A0755C /* UI */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = UI; sourceTree = "<group>"; };
+		4D80C4D72FA5F35700C10C05 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -71,6 +73,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D6EFDDC2F0114C000D21EB9 /* Profile in Frameworks */,
+				4D80C4D82FA5F35700C10C05 /* StoreKit.framework in Frameworks */,
 				4D6EFDD32F01148A00D21EB9 /* Navigation in Frameworks */,
 				4D6EFDD02F01147100D21EB9 /* Feed in Frameworks */,
 				4D6EFDD92F0114AE00D21EB9 /* Onboarding in Frameworks */,
@@ -106,6 +109,7 @@
 				4D5A40922E9A5FCA00A0755C /* iosUITests */,
 				4D5A40752E9A5FC800A0755C /* Products */,
 				4D1FEB9A2F52F69000D21C61 /* Dibba.icon */,
+				4D80C4D62FA5F35700C10C05 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -129,6 +133,14 @@
 				4D5A40A62E9A5FD900A0755C /* UI */,
 			);
 			path = Packages;
+			sourceTree = "<group>";
+		};
+		4D80C4D62FA5F35700C10C05 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4D80C4D72FA5F35700C10C05 /* StoreKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -250,6 +262,7 @@
 				4D1C712F2F338D5000261113 /* XCRemoteSwiftPackageReference "Auth0" */,
 				4D1C71742F33A4F400261113 /* XCLocalSwiftPackageReference "Packages/ApiClient" */,
 				4D1C71752F33A52800261113 /* XCLocalSwiftPackageReference "Packages/Servicing" */,
+				4D80C4D92FA5F96F00C10C05 /* XCLocalSwiftPackageReference "Packages/Paywall" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4D5A40752E9A5FC800A0755C /* Products */;
@@ -448,7 +461,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ios/ios.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_ASSET_PATHS = "\"ios/Preview Content\"";
 				DEVELOPMENT_TEAM = A6J72RFVVQ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -456,7 +469,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SupportingFiles/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Dibba;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -467,6 +482,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -491,7 +507,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ios/ios.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_ASSET_PATHS = "\"ios/Preview Content\"";
 				DEVELOPMENT_TEAM = A6J72RFVVQ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -499,7 +515,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SupportingFiles/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Dibba;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -510,6 +528,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -532,7 +551,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = A6J72RFVVQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
@@ -555,7 +574,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = A6J72RFVVQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
@@ -577,7 +596,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = A6J72RFVVQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
@@ -599,7 +618,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = A6J72RFVVQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
@@ -690,6 +709,10 @@
 		4D6EFDDA2F0114C000D21EB9 /* XCLocalSwiftPackageReference "Packages/Profile" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/Profile;
+		};
+		4D80C4D92FA5F96F00C10C05 /* XCLocalSwiftPackageReference "Packages/Paywall" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Paywall;
 		};
 /* End XCLocalSwiftPackageReference section */
 

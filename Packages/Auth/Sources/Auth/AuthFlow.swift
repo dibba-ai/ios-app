@@ -1,3 +1,4 @@
+import AuthenticationServices
 import Dependencies
 import Navigation
 import os.log
@@ -73,6 +74,7 @@ private struct LoginScreen: View {
     var onLogin: () -> Void
 
     @Dependency(\.authService) var authService
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var isLoading = false
     @State private var errorMessage: String?
@@ -82,7 +84,6 @@ private struct LoginScreen: View {
         VStack(spacing: 32) {
             Spacer()
 
-            // App Logo
             Image(systemName: "shield.checkered")
                 .font(.system(size: 80))
                 .foregroundStyle(.blue)
@@ -97,7 +98,6 @@ private struct LoginScreen: View {
 
             Spacer()
 
-            // Login Button
             if isLoading {
                 ProgressView()
                     .scaleEffect(1.5)
@@ -106,20 +106,18 @@ private struct LoginScreen: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                Button {
-                    Task {
-                        await signIn()
+                SignInWithAppleButton(
+                    .signIn,
+                    onRequest: { request in
+                        request.requestedScopes = [.fullName, .email]
+                    },
+                    onCompletion: { result in
+                        Task { await handleAppleResult(result) }
                     }
-                } label: {
-                    HStack {
-                        Image(systemName: "person.badge.key.fill")
-                        Text("Sign in")
-                    }
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                }
-                .buttonStyle(.borderedProminent)
+                )
+                .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+                .frame(height: 50)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
             Spacer()
@@ -138,24 +136,48 @@ private struct LoginScreen: View {
         }
     }
 
-    private func signIn() async {
+    private func handleAppleResult(_ result: Result<ASAuthorization, Error>) async {
         isLoading = true
         defer { isLoading = false }
 
-        do {
-            try await authService.signIn()
+        switch result {
+        case .success(let authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                  let authCodeData = credential.authorizationCode,
+                  let authCode = String(data: authCodeData, encoding: .utf8)
+            else {
+                logger.error("Apple authorization missing authorizationCode")
+                errorMessage = "Apple sign in failed: missing authorization code"
+                showingError = true
+                return
+            }
 
-            if authService.authState == .authenticated {
-                logger.info("Sign in successful, calling onLogin")
-                onLogin()
-            } else {
-                logger.warning("Sign in completed but not authenticated")
-                errorMessage = "Sign in failed. Please try again."
+            do {
+                try await authService.signInWithApple(
+                    authorizationCode: authCode,
+                    fullName: credential.fullName
+                )
+                if authService.authState == .authenticated {
+                    logger.info("Apple sign in successful, calling onLogin")
+                    onLogin()
+                } else {
+                    logger.warning("Apple sign in completed but not authenticated")
+                    errorMessage = "Sign in failed. Please try again."
+                    showingError = true
+                }
+            } catch {
+                logger.error("Apple sign in error: \(error.localizedDescription)")
+                errorMessage = "Apple sign in failed: \(error.localizedDescription)"
                 showingError = true
             }
-        } catch {
-            logger.error("Sign in error: \(error.localizedDescription)")
-            errorMessage = "Sign in failed: \(error.localizedDescription)"
+
+        case .failure(let error):
+            if (error as? ASAuthorizationError)?.code == .canceled {
+                logger.info("Apple sign in cancelled by user")
+                return
+            }
+            logger.error("Apple authorization failed: \(error.localizedDescription)")
+            errorMessage = "Apple sign in failed: \(error.localizedDescription)"
             showingError = true
         }
     }

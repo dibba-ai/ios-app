@@ -21,11 +21,12 @@ let package = Package(
         .package(path: "../Servicing"),
         .package(path: "../ApiClient"),
         .package(path: "../UI"),
+        .package(path: "../Paywall"),
     ],
     targets: [
         .target(
             name: "Profile",
-            dependencies: ["Auth", "Core", "Servicing", "ApiClient", "UI"]
+            dependencies: ["Auth", "Core", "Servicing", "ApiClient", "UI", "Paywall"]
         ),
         .testTarget(
             name: "ProfileTests",

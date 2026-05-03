@@ -1,5 +1,5 @@
 {
-  "originHash" : "3240209dbe22d780e653c9d641e34ff4e4b99acad1e040934770d0e515359355",
+  "originHash" : "bf69fc07495aff451369ca036225702b6134af31adc6219535c7a235d74e660f",
   "pins" : [
     {
       "identity" : "auth0.swift",
@@ -20,30 +20,12 @@
       }
     },
     {
-      "identity" : "grdb.swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/groue/GRDB.swift",
-      "state" : {
-        "revision" : "2cf6c756e1e5ef6901ebae16576a7e4e4b834622",
-        "version" : "6.29.3"
-      }
-    },
-    {
       "identity" : "jwtdecode.swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/auth0/JWTDecode.swift.git",
       "state" : {
         "revision" : "36a5ce735a61c4bc119593f43ce2c027b4ca7392",
         "version" : "3.3.0"
-      }
-    },
-    {
-      "identity" : "purchases-ios-spm",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/RevenueCat/purchases-ios-spm.git",
-      "state" : {
-        "revision" : "8f5f5e1b95506f89524cdbb70bcaf096a6f6fcc2",
-        "version" : "5.70.0"
       }
     },
     {
@@ -65,15 +47,6 @@
       }
     },
     {
-      "identity" : "swift-collections",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-collections",
-      "state" : {
-        "revision" : "6675bc0ff86e61436e615df6fc5174e043e57924",
-        "version" : "1.4.1"
-      }
-    },
-    {
       "identity" : "swift-concurrency-extras",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-concurrency-extras",
@@ -83,48 +56,12 @@
       }
     },
     {
-      "identity" : "swift-custom-dump",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pointfreeco/swift-custom-dump",
-      "state" : {
-        "revision" : "06c57924455064182d6b217f06ebc05d00cb2990",
-        "version" : "1.5.0"
-      }
-    },
-    {
       "identity" : "swift-dependencies",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-dependencies",
       "state" : {
         "revision" : "706feb7858a7f6c242879d137b8ee30926aa5b26",
         "version" : "1.12.0"
-      }
-    },
-    {
-      "identity" : "swift-identified-collections",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pointfreeco/swift-identified-collections",
-      "state" : {
-        "revision" : "322d9ffeeba85c9f7c4984b39422ec7cc3c56597",
-        "version" : "1.1.1"
-      }
-    },
-    {
-      "identity" : "swift-perception",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pointfreeco/swift-perception",
-      "state" : {
-        "revision" : "25ac73741c3436605d61eceb5207e896973918e7",
-        "version" : "2.0.10"
-      }
-    },
-    {
-      "identity" : "swift-sharing",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pointfreeco/swift-sharing",
-      "state" : {
-        "revision" : "bc27f8322bc30f6ce7d864d137dc77a6de8b57eb",
-        "version" : "2.8.0"
       }
     },
     {

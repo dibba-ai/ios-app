@@ -34,6 +34,9 @@ public protocol APIClienting: Sendable {
     // API Keys
     func listApiKeys() async throws -> [ApiKeyDTO]
     func createApiKey(input: CreateApiKeyInput) async throws -> ApiKeyDTO
+
+    // Realtime
+    func getRealtimeOptions() async throws -> RealtimeOptionsDTO
 }
 
 // MARK: - API Client Implementation
@@ -177,6 +180,17 @@ public final class APIClient: APIClienting, @unchecked Sendable {
             operationName: "listReports"
         )
         return response.listReports
+    }
+
+    // MARK: - Realtime (API Service)
+
+    public func getRealtimeOptions() async throws -> RealtimeOptionsDTO {
+        let response: RealtimeOptionsResponse = try await apiClient.execute(
+            query: RealtimeQueries.realtimeOptions,
+            variables: EmptyVariables(),
+            operationName: "realtimeOptions"
+        )
+        return response.realtimeOptions
     }
 }
 
@@ -376,5 +390,9 @@ public final class MockAPIClient: APIClienting, @unchecked Sendable {
 
     public func listReports(ids: [String]) async throws -> [ReportDTO] {
         []
+    }
+
+    public func getRealtimeOptions() async throws -> RealtimeOptionsDTO {
+        RealtimeOptionsDTO(voices: [])
     }
 }

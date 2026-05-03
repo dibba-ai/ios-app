@@ -11,14 +11,14 @@
 #   ./scripts/set-version.sh 1.2.3 42    # sets MARKETING_VERSION=1.2.3, build=42
 #
 # Updates every MARKETING_VERSION + CURRENT_PROJECT_VERSION occurrence in
-# ios.xcodeproj/project.pbxproj (Debug + Release across all targets).
+# Dibba.xcodeproj/project.pbxproj (Debug + Release across all targets).
 
 set -euo pipefail
 
 # Resolve repo root relative to this script so it works from any cwd.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
-PBXPROJ="$REPO_ROOT/ios.xcodeproj/project.pbxproj"
+PBXPROJ="$REPO_ROOT/Dibba.xcodeproj/project.pbxproj"
 
 if [[ ! -f "$PBXPROJ" ]]; then
     echo "error: project.pbxproj not found at $PBXPROJ" >&2
@@ -72,6 +72,6 @@ echo "  MARKETING_VERSION:       $CURRENT_MARKETING -> $NEW_MARKETING  (${MARKET
 echo "  CURRENT_PROJECT_VERSION: $CURRENT_BUILD -> $NEW_BUILD  (${BUILD_COUNT} entries)"
 echo ""
 echo "Next steps:"
-echo "  1. git diff ios.xcodeproj/project.pbxproj  # review"
+echo "  1. git diff Dibba.xcodeproj/project.pbxproj  # review"
 echo "  2. xcodebuild  # verify"
 echo "  3. Archive in Xcode and upload to App Store Connect"

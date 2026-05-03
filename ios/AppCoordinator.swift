@@ -44,6 +44,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
     @Dependency(\.profileService) var profileService
     @Dependency(\.transactionService) var transactionService
     @Dependency(\.targetService) var targetService
+    @Dependency(\.paywallService) var paywallService
 
     func start() {
         logger.info("AppCoordinator.start()")
@@ -55,6 +56,9 @@ final class AppCoordinator: NavigationFlowCoordinating {
         showSplash()
 
         Task {
+            // Configure RevenueCat as early as possible — independent of auth.
+            await configurePaywall()
+
             // Handle first launch (clear stale auth from reinstall)
             await firstLaunchService.handleFirstLaunchIfNeeded()
 
@@ -63,6 +67,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
 
             // Drive onboarding state from server-side profile presence
             if accountManager.isSignedIn {
+                await paywallService.identify(userId: authService.currentUser?.id)
                 await evaluateOnboardingFromProfile()
             }
 
@@ -121,6 +126,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
                 guard let self else { return }
 
                 Task {
+                    await self.paywallService.identify(userId: self.authService.currentUser?.id)
                     await self.evaluateOnboardingFromProfile()
                     let state = await self.accountManager.state
                     await MainActor.run {
@@ -246,6 +252,9 @@ final class AppCoordinator: NavigationFlowCoordinating {
             // Sign out from Auth0
             try? await authService.signOut()
 
+            // Reset RevenueCat to anonymous so the next sign-in starts clean.
+            await paywallService.logout()
+
             // Reset all app state
             try? await appResetService.resetAllState()
 
@@ -255,6 +264,15 @@ final class AppCoordinator: NavigationFlowCoordinating {
                 currentState = .needAuthenticationAndOnboarding
             }
         }
+    }
+
+    private func configurePaywall() async {
+        let apiKey = (Bundle.main.object(forInfoDictionaryKey: "RevenueCatPublicAPIKey") as? String) ?? ""
+        guard !apiKey.isEmpty else {
+            logger.warning("RevenueCatPublicAPIKey missing in Info.plist — paywall disabled")
+            return
+        }
+        await paywallService.configure(apiKey: apiKey)
     }
 }
 

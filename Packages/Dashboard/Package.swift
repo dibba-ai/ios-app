@@ -20,6 +20,7 @@ let package = Package(
         .package(path: "../Auth"),
         .package(path: "../Servicing"),
         .package(path: "../Debug"),
+        .package(path: "../Paywall"),
     ],
     targets: [
         .target(
@@ -31,6 +32,7 @@ let package = Package(
                 "Auth",
                 "Servicing",
                 "Debug",
+                "Paywall",
             ]
         ),
         .testTarget(

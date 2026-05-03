@@ -18,8 +18,11 @@ public protocol AuthServicing: Sendable {
     /// Current user profile (nil if not authenticated)
     var currentUser: AuthUser? { get async }
 
-    /// Sign in with Auth0 WebAuth
+    /// Sign in with Auth0 WebAuth (fallback / generic)
     func signIn() async throws
+
+    /// Sign in natively with Apple — exchanges Apple authorization code for Auth0 credentials
+    func signInWithApple(authorizationCode: String, fullName: PersonNameComponents?) async throws
 
     /// Sign out and clear session
     func signOut() async throws
@@ -117,6 +120,26 @@ public final class AuthenticationService: AuthServicing, @unchecked Sendable {
 
         authState = .authenticated
         logger.info("Sign in completed successfully")
+    }
+
+    public func signInWithApple(authorizationCode: String, fullName: PersonNameComponents?) async throws {
+        logger.info("Starting native Apple sign in...")
+
+        let credentials = try await Auth0
+            .authentication()
+            .login(
+                appleAuthorizationCode: authorizationCode,
+                fullName: fullName,
+                audience: "https://getlivepass.com",
+                scope: "openid profile email offline_access"
+            )
+            .start()
+
+        let stored = credentialsManager.store(credentials: credentials)
+        logger.info("Credentials stored: \(stored)")
+
+        authState = .authenticated
+        logger.info("Apple sign in completed successfully")
     }
 
     public func signOut() async throws {
