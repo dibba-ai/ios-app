@@ -138,7 +138,7 @@ struct PreferencesSection: View {
             )
         } label: {
             LabeledContent("Currency") {
-                if let currency = Servicing.Currency.find(by: profile.currency) {
+                if let currency = Currency.find(by: profile.currency) {
                     Text("\(currency.emoji) \(currency.id)")
                         .foregroundStyle(.secondary)
                 } else if let currencyCode = profile.currency {

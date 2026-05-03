@@ -1,7 +1,9 @@
 import SwiftUI
 
 public struct LegalFooter: View {
-    public init() {}
+    public init(showVersion: Bool = false) {
+        self.showVersion = showVersion
+    }
 
     public var body: some View {
         VStack(spacing: 8) {
@@ -10,14 +12,21 @@ public struct LegalFooter: View {
                 Link("Privacy Policy", destination: URL(string: "https://dibba.ai/privacy")!)
             }
             .font(.footnote)
+            .fontWeight(.bold)
+            .underline()
+            .foregroundStyle(.secondary)
             VStack(spacing: 2) {
                 Text("Dibba.ai \u{00A9} 2026")
-                Text(versionLine)
+                if showVersion {
+                    Text(versionLine)
+                }
             }
             .font(.footnote)
             .foregroundStyle(.secondary)
         }
     }
+
+    private let showVersion: Bool
 
     private var versionLine: String {
         let info = Bundle.main.infoDictionary

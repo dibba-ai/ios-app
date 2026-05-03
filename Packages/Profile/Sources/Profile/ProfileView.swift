@@ -39,7 +39,7 @@ public struct ProfileView: View {
                 )
 
                 Section {} footer: {
-                    LegalFooter()
+                    LegalFooter(showVersion: true)
                         .frame(maxWidth: .infinity)
                 }
             } else if isLoadingProfile {

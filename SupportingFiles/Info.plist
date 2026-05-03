@@ -15,5 +15,11 @@
 	</array>
 	<key>RevenueCatPublicAPIKey</key>
 	<string>appl_NFUDySROJvUphntTMBzvulIKbLM</string>
+	<key>PostHogProjectToken</key>
+	<string>phc_rQCfcWocU71Zuu4fz5QMBORAoxsNZvzD6y0bAhVn5QT</string>
+	<key>PostHogHost</key>
+	<string>https://us.i.posthog.com</string>
+	<key>UILaunchScreen</key>
+	<dict/>
 </dict>
 </plist>

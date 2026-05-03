@@ -85,7 +85,7 @@ public struct LoggerAnalyticsService: AnalyticsServicing {
 // MARK: - Dependency Registration
 
 private enum AnalyticsServiceKey: DependencyKey {
-    static let liveValue: any AnalyticsServicing = LoggerAnalyticsService()
+    static let liveValue: any AnalyticsServicing = PostHogAnalyticsService()
     static let testValue: any AnalyticsServicing = LoggerAnalyticsService()
 }
 

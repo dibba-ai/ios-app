@@ -281,9 +281,11 @@ final class AppCoordinator: NavigationFlowCoordinating {
 private struct SplashView: View {
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "shield.checkered")
-                .font(.system(size: 80))
-                .foregroundStyle(.blue)
+            Image("AppLogo", bundle: .main)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 120, height: 120)
+                .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
 
             Text("Dibba")
                 .font(.largeTitle)

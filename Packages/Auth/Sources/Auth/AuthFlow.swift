@@ -83,12 +83,15 @@ private struct LoginScreen: View {
     var body: some View {
         VStack(spacing: 32) {
             Spacer()
+                .frame(height: 60)
 
-            Image(systemName: "shield.checkered")
-                .font(.system(size: 80))
-                .foregroundStyle(.blue)
+            Image("AppLogo", bundle: .main)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 120, height: 120)
+                .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
 
-            Text("Dibba.ai")
+            Text("Dibba")
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
@@ -106,25 +109,37 @@ private struct LoginScreen: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                SignInWithAppleButton(
-                    .signIn,
-                    onRequest: { request in
-                        request.requestedScopes = [.fullName, .email]
-                    },
-                    onCompletion: { result in
-                        Task { await handleAppleResult(result) }
+                VStack(spacing: 12) {
+                    SignInWithAppleButton(
+                        .signIn,
+                        onRequest: { request in
+                            request.requestedScopes = [.fullName, .email]
+                        },
+                        onCompletion: { result in
+                            Task { await handleAppleResult(result) }
+                        }
+                    )
+                    .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+                    .frame(height: 50)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                    Button {
+                        Task { await signInWebAuth() }
+                    } label: {
+                        Text("Other sign in methods")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
                     }
-                )
-                .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
-                .frame(height: 50)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                }
             }
 
-            Spacer()
-                .frame(height: 40)
-
-            Spacer()
-                .frame(height: 20)
+            LegalFooter()
+                .padding(.top, 16)
+                .padding(.bottom, 8)
         }
         .padding(.horizontal, 32)
         .alert("Error", isPresented: $showingError) {
@@ -133,6 +148,27 @@ private struct LoginScreen: View {
             }
         } message: {
             Text(errorMessage ?? "Unknown error")
+        }
+    }
+
+    private func signInWebAuth() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            try await authService.signIn()
+            if authService.authState == .authenticated {
+                logger.info("WebAuth sign in successful, calling onLogin")
+                onLogin()
+            } else {
+                logger.warning("WebAuth sign in completed but not authenticated")
+                errorMessage = "Sign in failed. Please try again."
+                showingError = true
+            }
+        } catch {
+            logger.error("WebAuth sign in error: \(error.localizedDescription)")
+            errorMessage = "Sign in failed: \(error.localizedDescription)"
+            showingError = true
         }
     }
 
