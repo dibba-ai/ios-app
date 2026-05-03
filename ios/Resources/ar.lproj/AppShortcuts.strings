@@ -1,0 +1,18 @@
+/* Log Purchase phrases */
+"Log purchase in ${applicationName}" = "سجّل عملية شراء في ${applicationName}";
+"Add purchase in ${applicationName}" = "أضف عملية شراء في ${applicationName}";
+"I spent in ${applicationName}" = "صرفت في ${applicationName}";
+"Log spending in ${applicationName}" = "سجّل إنفاقًا في ${applicationName}";
+"Add expense in ${applicationName}" = "أضف مصروفًا في ${applicationName}";
+
+/* Log Income phrases */
+"Log income in ${applicationName}" = "سجّل دخلًا في ${applicationName}";
+"Add income in ${applicationName}" = "أضف دخلًا في ${applicationName}";
+"Got paid in ${applicationName}" = "تقاضيت راتبًا في ${applicationName}";
+"Record income in ${applicationName}" = "احسب دخلًا في ${applicationName}";
+
+/* Log Transfer phrases */
+"Log transfer in ${applicationName}" = "سجّل تحويلًا في ${applicationName}";
+"Move money in ${applicationName}" = "نقل الأموال في ${applicationName}";
+"Add transfer in ${applicationName}" = "أضف تحويلًا في ${applicationName}";
+"Record transfer in ${applicationName}" = "احسب تحويلًا في ${applicationName}";

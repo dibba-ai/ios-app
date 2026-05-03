@@ -76,4 +76,7 @@ public enum AnalyticsEvent: String, Codable, Sendable {
     case updatesPageOpened = "UPDATES_PAGE_OPENED"
     case faqItemOpened = "FAQ_ITEM_OPENED"
     case faqItemClosed = "FAQ_ITEM_CLOSED"
+    case intentInvoked = "INTENT_INVOKED"
+    case intentSucceeded = "INTENT_SUCCEEDED"
+    case intentFailed = "INTENT_FAILED"
 }

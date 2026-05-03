@@ -18,11 +18,12 @@ let package = Package(
         .package(path: "../ApiClient"),
         .package(path: "../Database"),
         .package(path: "../Core"),
+        .package(path: "../Analytics"),
     ],
     targets: [
         .target(
             name: "Feed",
-            dependencies: ["Servicing", "ApiClient", "Database", "Core"]
+            dependencies: ["Servicing", "ApiClient", "Database", "Core", "Analytics"]
         ),
         .testTarget(
             name: "FeedTests",

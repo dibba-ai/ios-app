@@ -1,3 +1,4 @@
+import Analytics
 import ApiClient
 import Core
 import Dependencies
@@ -13,6 +14,7 @@ struct AddPurchaseView: View {
     @Environment(\.dismiss) private var dismiss
     @Dependency(\.transactionService) private var transactionService
     @Dependency(\.profileService) private var profileService
+    @Dependency(\.analytics) private var analytics
 
     let onCreated: (Servicing.Transaction) -> Void
 
@@ -90,6 +92,8 @@ struct AddPurchaseView: View {
                 }
             }
             .task { await onAppearSetup() }
+            .onAppear { analytics.capture(.addTransactionModalOpened) }
+            .onDisappear { analytics.capture(.addTransactionModalClosed) }
             .onChange(of: category) { _, newValue in
                 UserDefaults.standard.set(newValue.id, forKey: lastCategoryEntryKey)
             }
@@ -154,10 +158,20 @@ struct AddPurchaseView: View {
 
         do {
             let created = try await transactionService.createTransaction(input)
+            analytics.capture(.manualTransactionAdded, properties: [
+                "source": .string("modal"),
+                "amount": .double(amountValue),
+                "currency": .string(currency),
+                "is_income": .bool(category.isIncome)
+            ])
             onCreated(created)
             dismiss()
         } catch {
             logger.error("Failed to create transaction: \(error.localizedDescription)")
+            analytics.capture(.manualTransactionFailed, properties: [
+                "source": .string("modal"),
+                "error": .string(error.localizedDescription)
+            ])
             errorMessage = error.localizedDescription
         }
     }

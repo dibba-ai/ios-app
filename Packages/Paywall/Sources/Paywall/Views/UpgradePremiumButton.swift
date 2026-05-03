@@ -1,3 +1,5 @@
+import Analytics
+import Dependencies
 import SwiftUI
 
 /// Drop-in SwiftUI button that opens the paywall in a sheet. Owns its own
@@ -23,8 +25,11 @@ public struct UpgradePremiumButton: View {
 
     // MARK: Public
 
+    @Dependency(\.analytics) private var analytics
+
     public var body: some View {
         Button {
+            analytics.capture(.paywallClicked)
             isPaywallPresented = true
         } label: {
             HStack(spacing: 8) {

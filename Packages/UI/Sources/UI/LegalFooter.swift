@@ -1,16 +1,34 @@
 import SwiftUI
 
+public enum LegalLink: Sendable {
+    case terms
+    case privacy
+}
+
 public struct LegalFooter: View {
-    public init(showVersion: Bool = false) {
+    public init(
+        showVersion: Bool = false,
+        onLinkTap: ((LegalLink) -> Void)? = nil
+    ) {
         self.showVersion = showVersion
+        self.onLinkTap = onLinkTap
     }
+
+    @Environment(\.openURL) private var openURL
 
     public var body: some View {
         VStack(spacing: 8) {
             HStack(spacing: 16) {
-                Link("Terms & Conditions", destination: URL(string: "https://dibba.ai/terms")!)
-                Link("Privacy Policy", destination: URL(string: "https://dibba.ai/privacy")!)
+                Button("Terms & Conditions") {
+                    onLinkTap?(.terms)
+                    openURL(URL(string: "https://dibba.ai/terms")!)
+                }
+                Button("Privacy Policy") {
+                    onLinkTap?(.privacy)
+                    openURL(URL(string: "https://dibba.ai/privacy")!)
+                }
             }
+            .buttonStyle(.plain)
             .font(.footnote)
             .fontWeight(.bold)
             .underline()
@@ -27,6 +45,7 @@ public struct LegalFooter: View {
     }
 
     private let showVersion: Bool
+    private let onLinkTap: ((LegalLink) -> Void)?
 
     private var versionLine: String {
         let info = Bundle.main.infoDictionary

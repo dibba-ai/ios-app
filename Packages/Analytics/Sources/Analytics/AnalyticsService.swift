@@ -10,6 +10,7 @@ public protocol AnalyticsServicing: Sendable {
     func capture(_ event: AnalyticsEvent, properties: [String: AnyAnalyticsValue]?)
     func identify(userId: String, properties: [String: AnyAnalyticsValue]?)
     func reset()
+    func flush()
 }
 
 public extension AnalyticsServicing {
@@ -79,6 +80,10 @@ public struct LoggerAnalyticsService: AnalyticsServicing {
 
     public func reset() {
         logger.info("analytics reset")
+    }
+
+    public func flush() {
+        logger.info("analytics flush")
     }
 }
 

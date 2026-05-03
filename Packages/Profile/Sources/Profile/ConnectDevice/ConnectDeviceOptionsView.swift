@@ -1,9 +1,13 @@
+import Analytics
+import Dependencies
 import SwiftUI
 
 struct ConnectDeviceOptionsView: View {
     let apiKeyId: String
 
     @State private var includeLocation = true
+
+    @Dependency(\.analytics) private var analytics
 
     var body: some View {
         List {
@@ -28,6 +32,11 @@ struct ConnectDeviceOptionsView: View {
                         }
                         .padding(.vertical, 6)
                     }
+                    .simultaneousGesture(TapGesture().onEnded {
+                        analytics.capture(.connectDeviceOptionSelected, properties: [
+                            "method": .string(method.title)
+                        ])
+                    })
                 }
             } header: {
                 Text("Choose how to capture transactions")
@@ -42,5 +51,7 @@ struct ConnectDeviceOptionsView: View {
         }
         .listStyle(.insetGrouped)
         .navigationTitle("Add Device")
+        .onAppear { analytics.capture(.connectDeviceOpened) }
+        .onDisappear { analytics.capture(.connectDeviceClosed) }
     }
 }

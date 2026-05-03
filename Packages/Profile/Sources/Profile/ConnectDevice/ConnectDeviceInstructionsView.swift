@@ -1,3 +1,5 @@
+import Analytics
+import Dependencies
 import SwiftUI
 import os.log
 
@@ -9,6 +11,8 @@ struct ConnectDeviceInstructionsView: View {
     let includeLocation: Bool
 
     @State private var showCopiedToast = false
+
+    @Dependency(\.analytics) private var analytics
 
     private var webhookURL: String {
         method.webhookURL(apiKeyId: apiKeyId)
@@ -32,7 +36,7 @@ struct ConnectDeviceInstructionsView: View {
         .listSectionSpacing(12)
         .navigationTitle("Setup \(method.title)")
         .onAppear {
-            copyToClipboard()
+            copyToClipboard(auto: true)
         }
         .overlay(alignment: .top) {
             if showCopiedToast {
@@ -63,7 +67,7 @@ struct ConnectDeviceInstructionsView: View {
                     Spacer()
 
                     Button {
-                        copyToClipboard()
+                        copyToClipboard(auto: false)
                     } label: {
                         Image(systemName: "doc.on.doc")
                             .font(.body)
@@ -180,6 +184,11 @@ struct ConnectDeviceInstructionsView: View {
             Link(destination: url) {
                 Label("Watch Video Tutorial", systemImage: "play.circle.fill")
             }
+            .simultaneousGesture(TapGesture().onEnded {
+                analytics.capture(.connectDeviceTutorialClicked, properties: [
+                    "method": .string(method.title)
+                ])
+            })
         }
     }
 
@@ -216,9 +225,14 @@ struct ConnectDeviceInstructionsView: View {
         .padding(.top, 8)
     }
 
-    private func copyToClipboard() {
+    private func copyToClipboard(auto: Bool) {
         UIPasteboard.general.string = webhookURL
-        logger.info("URL copied to clipboard")
+        logger.info("URL copied to clipboard (auto: \(auto))")
+        if !auto {
+            analytics.capture(.connectDeviceWebhookUrlCopied, properties: [
+                "method": .string(method.title)
+            ])
+        }
         showCopiedToast = true
         Task {
             try? await Task.sleep(for: .seconds(2))

@@ -1,3 +1,4 @@
+import Analytics
 import Dependencies
 import os.log
 import Servicing
@@ -24,6 +25,7 @@ public struct TransactionDetailDrawer: View {
 
     @Environment(\.dismiss) private var dismiss
     @Dependency(\.transactionService) private var transactionService
+    @Dependency(\.analytics) private var analytics
     @State private var dragOffset: CGFloat = 0
     @State private var isDraggingHorizontally = false
     @State private var directionDecided = false
@@ -97,6 +99,13 @@ public struct TransactionDetailDrawer: View {
             } message: {
                 Text("This action cannot be undone.")
             }
+            .onAppear {
+                let id = currentIndex < transactions.count ? transactions[currentIndex].id : ""
+                analytics.capture(.transactionOpened, properties: ["transaction_id": .string(id)])
+            }
+            .onDisappear {
+                analytics.capture(.transactionClosed)
+            }
         }
     }
 
@@ -109,10 +118,15 @@ public struct TransactionDetailDrawer: View {
         defer { isDeleting = false }
         do {
             _ = try await transactionService.deleteTransaction(id: id)
+            analytics.capture(.transactionDeleted, properties: ["transaction_id": .string(id)])
             onDeleted?(id)
             dismiss()
         } catch {
             logger.error("deleteTransaction failed: \(error.localizedDescription)")
+            analytics.capture(.transactionDeleteFailed, properties: [
+                "transaction_id": .string(id),
+                "error": .string(error.localizedDescription)
+            ])
         }
     }
 

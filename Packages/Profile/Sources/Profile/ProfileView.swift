@@ -1,3 +1,4 @@
+import Analytics
 import ApiClient
 import Auth
 import Core
@@ -39,8 +40,15 @@ public struct ProfileView: View {
                 )
 
                 Section {} footer: {
-                    LegalFooter(showVersion: true)
-                        .frame(maxWidth: .infinity)
+                    LegalFooter(showVersion: true) { link in
+                        switch link {
+                        case .terms:
+                            analytics.capture(.termsPageOpened)
+                        case .privacy:
+                            analytics.capture(.privacyPolicyPageOpened)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 }
             } else if isLoadingProfile {
                 Section {
@@ -72,6 +80,7 @@ public struct ProfileView: View {
             }
         }
         .task {
+            analytics.capture(.profilePageOpened)
             await loadData()
         }
         .refreshable {
@@ -86,6 +95,7 @@ public struct ProfileView: View {
     @Dependency(\.targetService) private var targetService
     @Dependency(\.reportService) private var reportService
     @Dependency(\.apiKeyService) private var apiKeyService
+    @Dependency(\.analytics) private var analytics
 
     @State private var profile: Servicing.Profile?
     @State private var authUser: AuthUser?

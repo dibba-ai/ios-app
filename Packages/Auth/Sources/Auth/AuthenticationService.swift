@@ -18,6 +18,12 @@ public protocol AuthServicing: Sendable {
     /// Current user profile (nil if not authenticated)
     var currentUser: AuthUser? { get async }
 
+    /// Returns a valid access token from the keychain, refreshing if expired.
+    /// Bypasses `authState` gating and the userInfo network call — safe to call
+    /// from cold-start contexts (e.g. App Intents) where `checkAuthenticationStatus`
+    /// may not have completed yet.
+    func accessToken() async throws -> String
+
     /// Sign in with Auth0 WebAuth (fallback / generic)
     func signIn() async throws
 
@@ -90,6 +96,14 @@ public final class AuthenticationService: AuthServicing, @unchecked Sendable {
                 return nil
             }
         }
+    }
+
+    public func accessToken() async throws -> String {
+        let credentials = try await credentialsManager.credentials()
+        if authState != .authenticated {
+            authState = .authenticated
+        }
+        return credentials.accessToken
     }
 
     public func checkAuthenticationStatus() async {

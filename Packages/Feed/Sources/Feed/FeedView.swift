@@ -1,3 +1,4 @@
+import Analytics
 import Database
 import Dependencies
 import Servicing
@@ -8,6 +9,7 @@ public struct FeedView: View {
 
     @Dependency(\.transactionService) var transactionService
     @Dependency(\.transactionStore) var store
+    @Dependency(\.analytics) var analytics
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -165,6 +167,7 @@ public struct FeedView: View {
             Task { await reloadFirstPage() }
         }
         .task {
+            analytics.capture(.feedPageOpened)
             await initialLoad()
         }
         .task {

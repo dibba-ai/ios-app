@@ -144,7 +144,7 @@ App Intents (iOS 16+), not legacy SiriKit / `INIntent`. Reason: HIG (Apple, June
 
 ## Phase 2 — Intents Package (4-6h)
 
-- [ ] **2.1** Create `Packages/Intents/` SPM module.
+- [x] **2.1** Create `Packages/Intents/` SPM module.
   ```
   Packages/Intents/
   ├── Package.swift
@@ -159,7 +159,7 @@ App Intents (iOS 16+), not legacy SiriKit / `INIntent`. Reason: HIG (Apple, June
   ```
   `Package.swift` deps: `Servicing`. Platform `.iOS(.v17)`.
 
-- [ ] **2.2** `LogPurchaseIntent`:
+- [x] **2.2** `LogPurchaseIntent`:
   ```swift
   struct LogPurchaseIntent: AppIntent {
       static var title: LocalizedStringResource = "Log Purchase"
@@ -196,13 +196,13 @@ App Intents (iOS 16+), not legacy SiriKit / `INIntent`. Reason: HIG (Apple, June
   }
   ```
 
-- [ ] **2.3** `LogIncomeIntent` — `isCredit=true, isDebit=false, isTransfer=true, isPurchase=false`. Default name = "Income".
+- [x] **2.3** `LogIncomeIntent` — `isCredit=true, isDebit=false, isTransfer=true, isPurchase=false`. Default name = "Income".
 
-- [ ] **2.4** `LogTransferIntent` w/ `direction: TransferDirection` enum (`incoming` / `outgoing`).
+- [x] **2.4** `LogTransferIntent` w/ `direction: TransferDirection` enum (`incoming` / `outgoing`).
   - `outgoing`: `isDebit=true, isTransfer=true`
   - `incoming`: `isCredit=true, isTransfer=true`
 
-- [ ] **2.5** `CurrencyResolver`:
+- [x] **2.5** `CurrencyResolver`:
   ```swift
   enum CurrencyResolver {
       static func resolve(term: String?, profileService: ProfileServicing) async -> String {
@@ -213,7 +213,7 @@ App Intents (iOS 16+), not legacy SiriKit / `INIntent`. Reason: HIG (Apple, June
   }
   ```
 
-- [ ] **2.6** `IntentError`:
+- [x] **2.6** `IntentError`:
   ```swift
   enum IntentError: Swift.Error, CustomLocalizedStringResourceConvertible {
       case unauthorized, network, invalidAmount, server(String)
@@ -237,8 +237,8 @@ App Intents (iOS 16+), not legacy SiriKit / `INIntent`. Reason: HIG (Apple, June
 
 ## Phase 3 — Wire Into App (1h)
 
-- [ ] **3.1** Add `Intents` package to main app target deps in `Dibba.xcodeproj`.
-- [ ] **3.2** Add `ios/AppShortcuts/DibbaAppShortcuts.swift`:
+- [x] **3.1** Add `Intents` package to main app target deps in `Dibba.xcodeproj`.
+- [x] **3.2** Add `ios/AppShortcuts/DibbaAppShortcuts.swift`:
   ```swift
   struct DibbaAppShortcuts: AppShortcutsProvider {
       static var appShortcuts: [AppShortcut] {
@@ -264,22 +264,22 @@ App Intents (iOS 16+), not legacy SiriKit / `INIntent`. Reason: HIG (Apple, June
   ```
   `AppShortcutsProvider` MUST live in main app target (not extension/SPM).
 
-- [ ] **3.3** Entitlements / Info.plist:
+- [x] **3.3** Entitlements / Info.plist:
   - `Info.plist`: `NSSiriUsageDescription = "Dibba uses Siri to log transactions by voice."`
   - Capability: enable **Siri** in Signing & Capabilities.
 
-- [ ] **3.4** Privacy: confirm no `INRequestSiriAuthorization` needed. HIG: "Don't request permission to use Siri" for App Intents-only apps.
+- [x] **3.4** Privacy: confirm no `INRequestSiriAuthorization` needed. HIG: "Don't request permission to use Siri" for App Intents-only apps.
 
 ## Phase 4 — Localization (2h)
 
-- [ ] **4.1** `AppShortcuts.strings` per locale:
+- [x] **4.1** `AppShortcuts.strings` per locale:
   - `en.lproj` — phrases as defined.
   - `ru.lproj` — "Записать покупку в Dibba", "Я потратил в Dibba", ...
   - `ar.lproj` — "سجل عملية شراء في Dibba", ...
 
-- [ ] **4.2** Mark all `LocalizedStringResource` strings — auto-pulls per-locale `.strings` when packaged.
+- [x] **4.2** Mark all `LocalizedStringResource` strings — auto-pulls per-locale `.strings` when packaged.
 
-- [ ] **4.3** Manual test in Settings → switch device language → verify Siri offers correct phrases.
+- [x] **4.3** Manual test in Settings → switch device language → verify Siri offers correct phrases.
 
 ## Phase 5 — Manual QA (2h)
 

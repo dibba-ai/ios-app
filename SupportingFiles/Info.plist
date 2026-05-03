@@ -21,5 +21,7 @@
 	<string>https://us.i.posthog.com</string>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>NSSiriUsageDescription</key>
+	<string>Dibba uses Siri to log transactions by voice.</string>
 </dict>
 </plist>

@@ -3,34 +3,41 @@
 import PackageDescription
 
 let package = Package(
-    name: "Paywall",
+    name: "Intents",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v17)
     ],
     products: [
         .library(
-            name: "Paywall",
-            targets: ["Paywall"]
+            name: "Intents",
+            targets: ["Intents"]
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/RevenueCat/purchases-ios-spm.git", from: "5.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
+        .package(path: "../Core"),
+        .package(path: "../Servicing"),
+        .package(path: "../APIClient"),
         .package(path: "../Analytics"),
     ],
     targets: [
         .target(
-            name: "Paywall",
+            name: "Intents",
             dependencies: [
-                .product(name: "RevenueCat", package: "purchases-ios-spm"),
-                .product(name: "RevenueCatUI", package: "purchases-ios-spm"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
+                "Core",
+                "Servicing",
                 "Analytics",
+                .product(name: "ApiClient", package: "APIClient"),
+            ],
+            resources: [
+                .process("Resources"),
             ]
         ),
         .testTarget(
-            name: "PaywallTests",
-            dependencies: ["Paywall"]
+            name: "IntentsTests",
+            dependencies: ["Intents"]
         ),
     ]
 )

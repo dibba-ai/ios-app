@@ -6,11 +6,9 @@
 //
 
 import Analytics
-import os.log
+import Dependencies
 import SwiftUI
 import UIKit
-
-private let logger = Logger(subsystem: "ai.dibba.ios", category: "iosApp")
 
 @main
 struct iosApp: App {
@@ -24,21 +22,14 @@ struct iosApp: App {
 }
 
 final class AppDelegate: NSObject, UIApplicationDelegate {
+    @Dependency(\.analytics) private var analytics
+
     func application(
         _: UIApplication,
         didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        configurePostHog()
+        Analytics.bootstrap()
+        analytics.capture(.appOpened)
         return true
-    }
-
-    private func configurePostHog() {
-        let token = (Bundle.main.object(forInfoDictionaryKey: "PostHogProjectToken") as? String) ?? ""
-        let host = (Bundle.main.object(forInfoDictionaryKey: "PostHogHost") as? String) ?? ""
-        guard !token.isEmpty, !host.isEmpty else {
-            logger.warning("PostHogProjectToken or PostHogHost missing in Info.plist — analytics disabled")
-            return
-        }
-        PostHogAnalytics.setup(projectToken: token, host: host)
     }
 }

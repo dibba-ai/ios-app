@@ -1,3 +1,5 @@
+import Analytics
+import Dependencies
 import RevenueCat
 import RevenueCatUI
 import SwiftUI
@@ -52,6 +54,9 @@ public struct PaywallContainer: View {
             }
         }
         .task {
+            analytics.capture(.paywallModalOpened, properties: variationId.map {
+                ["variation_id": .string($0)]
+            })
             await loadOffering()
         }
     }
@@ -66,6 +71,8 @@ public struct PaywallContainer: View {
     @State private var offering: Offering?
     @State private var isLoading = true
     @State private var errorMessage: String?
+
+    @Dependency(\.analytics) private var analytics
 
     private func loadOffering() async {
         isLoading = true

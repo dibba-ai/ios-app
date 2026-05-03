@@ -1,3 +1,4 @@
+import Analytics
 import Dependencies
 import os.log
 import Servicing
@@ -25,6 +26,7 @@ public struct DashboardView: View {
             .padding(.vertical)
         }
         .task {
+            analytics.capture(.dashboardPageOpened)
             await loadProfile()
         }
     }
@@ -32,6 +34,7 @@ public struct DashboardView: View {
     // MARK: - Private
 
     @Dependency(\.profileService) private var profileService
+    @Dependency(\.analytics) private var analytics
     @State private var profile: Servicing.Profile?
     @State private var isLoading = true
 

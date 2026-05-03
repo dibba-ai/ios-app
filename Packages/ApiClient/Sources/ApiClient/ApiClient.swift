@@ -207,12 +207,11 @@ public final class AuthTokenProvider: TokenProviding, @unchecked Sendable {
             await authService.checkAuthenticationStatus()
         }
 
-        guard let user = await authService.currentUser,
-              let token = user.accessToken else {
+        do {
+            return try await authService.accessToken()
+        } catch {
             throw APIClientError.unauthorized
         }
-
-        return token
     }
 }
 

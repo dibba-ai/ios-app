@@ -1,3 +1,4 @@
+import Analytics
 import Auth
 import Dashboard
 import Dependencies
@@ -45,6 +46,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
     @Dependency(\.transactionService) var transactionService
     @Dependency(\.targetService) var targetService
     @Dependency(\.paywallService) var paywallService
+    @Dependency(\.analytics) var analytics
 
     func start() {
         logger.info("AppCoordinator.start()")
@@ -68,6 +70,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
             // Drive onboarding state from server-side profile presence
             if accountManager.isSignedIn {
                 await paywallService.identify(userId: authService.currentUser?.id)
+                await identifyCurrentUser()
                 await evaluateOnboardingFromProfile()
             }
 
@@ -127,6 +130,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
 
                 Task {
                     await self.paywallService.identify(userId: self.authService.currentUser?.id)
+                    await self.identifyCurrentUser()
                     await self.evaluateOnboardingFromProfile()
                     let state = await self.accountManager.state
                     await MainActor.run {
@@ -155,6 +159,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
                 self.accountManager.markOnboardingComplete()
 
                 Task {
+                    await self.identifyCurrentUser()
                     let state = await self.accountManager.state
                     await MainActor.run {
                         self.navigateToState(state)
@@ -255,6 +260,12 @@ final class AppCoordinator: NavigationFlowCoordinating {
             // Reset RevenueCat to anonymous so the next sign-in starts clean.
             await paywallService.logout()
 
+            // Capture sign-out before resetting so the event is attributed to the user.
+            analytics.capture(.signedOut)
+
+            // Unlink future analytics events from this user.
+            analytics.reset()
+
             // Reset all app state
             try? await appResetService.resetAllState()
 
@@ -264,6 +275,26 @@ final class AppCoordinator: NavigationFlowCoordinating {
                 currentState = .needAuthenticationAndOnboarding
             }
         }
+    }
+
+    private func identifyCurrentUser() async {
+        guard let userId = await authService.currentUser?.id else {
+            logger.warning("Skipping analytics identify — no current user id")
+            return
+        }
+
+        var props: [String: AnyAnalyticsValue] = [:]
+        if let profile = try? await profileService.getProfile(force: false) {
+            if !profile.email.isEmpty { props["email"] = .string(profile.email) }
+            let display = profile.displayName
+            if !display.isEmpty { props["name"] = .string(display) }
+            if !profile.firstName.isEmpty { props["first_name"] = .string(profile.firstName) }
+            if !profile.lastName.isEmpty { props["last_name"] = .string(profile.lastName) }
+            props["plan"] = .string(profile.plan.rawValue)
+            if let currency = profile.currency { props["currency"] = .string(currency) }
+        }
+
+        analytics.identify(userId: userId, properties: props.isEmpty ? nil : props)
     }
 
     private func configurePaywall() async {

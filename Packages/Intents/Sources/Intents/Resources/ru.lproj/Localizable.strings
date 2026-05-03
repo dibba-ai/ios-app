@@ -1,0 +1,33 @@
+/* Intent titles */
+"Log Purchase" = "Записать покупку";
+"Log Income" = "Записать доход";
+"Log Transfer" = "Записать перевод";
+
+/* Intent descriptions */
+"Record a purchase by voice." = "Записать покупку голосом.";
+"Record income by voice." = "Записать доход голосом.";
+"Record a transfer by voice." = "Записать перевод голосом.";
+
+/* Parameter titles */
+"Amount" = "Сумма";
+"Currency" = "Валюта";
+"Description" = "Описание";
+"Source" = "Источник";
+"Direction" = "Направление";
+"Incoming" = "Входящий";
+"Outgoing" = "Исходящий";
+
+/* Request value dialogs */
+"What's it for?" = "За что?";
+"Where did it come from?" = "От кого?";
+"Who's the transfer for?" = "Кому перевод?";
+
+/* Default names */
+"Purchase" = "Покупка";
+"Income" = "Доход";
+"Transfer" = "Перевод";
+
+/* Error messages */
+"Sign in to Dibba to log transactions." = "Войдите в Dibba, чтобы записывать транзакции.";
+"Couldn't reach Dibba. Try again." = "Не удалось связаться с Dibba. Попробуйте ещё раз.";
+"Amount must be greater than zero." = "Сумма должна быть больше нуля.";

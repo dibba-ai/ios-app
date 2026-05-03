@@ -1,0 +1,18 @@
+/* Log Purchase phrases */
+"Log purchase in ${applicationName}" = "Log purchase in ${applicationName}";
+"Add purchase in ${applicationName}" = "Add purchase in ${applicationName}";
+"I spent in ${applicationName}" = "I spent in ${applicationName}";
+"Log spending in ${applicationName}" = "Log spending in ${applicationName}";
+"Add expense in ${applicationName}" = "Add expense in ${applicationName}";
+
+/* Log Income phrases */
+"Log income in ${applicationName}" = "Log income in ${applicationName}";
+"Add income in ${applicationName}" = "Add income in ${applicationName}";
+"Got paid in ${applicationName}" = "Got paid in ${applicationName}";
+"Record income in ${applicationName}" = "Record income in ${applicationName}";
+
+/* Log Transfer phrases */
+"Log transfer in ${applicationName}" = "Log transfer in ${applicationName}";
+"Move money in ${applicationName}" = "Move money in ${applicationName}";
+"Add transfer in ${applicationName}" = "Add transfer in ${applicationName}";
+"Record transfer in ${applicationName}" = "Record transfer in ${applicationName}";

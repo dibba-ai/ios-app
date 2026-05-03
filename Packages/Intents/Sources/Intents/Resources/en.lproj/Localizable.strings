@@ -1,0 +1,33 @@
+/* Intent titles */
+"Log Purchase" = "Log Purchase";
+"Log Income" = "Log Income";
+"Log Transfer" = "Log Transfer";
+
+/* Intent descriptions */
+"Record a purchase by voice." = "Record a purchase by voice.";
+"Record income by voice." = "Record income by voice.";
+"Record a transfer by voice." = "Record a transfer by voice.";
+
+/* Parameter titles */
+"Amount" = "Amount";
+"Currency" = "Currency";
+"Description" = "Description";
+"Source" = "Source";
+"Direction" = "Direction";
+"Incoming" = "Incoming";
+"Outgoing" = "Outgoing";
+
+/* Request value dialogs */
+"What's it for?" = "What's it for?";
+"Where did it come from?" = "Where did it come from?";
+"Who's the transfer for?" = "Who's the transfer for?";
+
+/* Default names */
+"Purchase" = "Purchase";
+"Income" = "Income";
+"Transfer" = "Transfer";
+
+/* Error messages */
+"Sign in to Dibba to log transactions." = "Sign in to Dibba to log transactions.";
+"Couldn't reach Dibba. Try again." = "Couldn't reach Dibba. Try again.";
+"Amount must be greater than zero." = "Amount must be greater than zero.";

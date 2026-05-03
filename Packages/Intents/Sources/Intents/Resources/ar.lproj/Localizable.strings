@@ -1,0 +1,33 @@
+/* Intent titles */
+"Log Purchase" = "تسجيل عملية شراء";
+"Log Income" = "تسجيل دخل";
+"Log Transfer" = "تسجيل تحويل";
+
+/* Intent descriptions */
+"Record a purchase by voice." = "تسجيل عملية شراء بالصوت.";
+"Record income by voice." = "تسجيل دخل بالصوت.";
+"Record a transfer by voice." = "تسجيل تحويل بالصوت.";
+
+/* Parameter titles */
+"Amount" = "المبلغ";
+"Currency" = "العملة";
+"Description" = "الوصف";
+"Source" = "المصدر";
+"Direction" = "الاتجاه";
+"Incoming" = "وارد";
+"Outgoing" = "صادر";
+
+/* Request value dialogs */
+"What's it for?" = "لماذا؟";
+"Where did it come from?" = "من أين؟";
+"Who's the transfer for?" = "إلى من التحويل؟";
+
+/* Default names */
+"Purchase" = "شراء";
+"Income" = "دخل";
+"Transfer" = "تحويل";
+
+/* Error messages */
+"Sign in to Dibba to log transactions." = "سجّل دخولك إلى Dibba لتسجيل المعاملات.";
+"Couldn't reach Dibba. Try again." = "تعذّر الوصول إلى Dibba. حاول مرة أخرى.";
+"Amount must be greater than zero." = "يجب أن يكون المبلغ أكبر من صفر.";

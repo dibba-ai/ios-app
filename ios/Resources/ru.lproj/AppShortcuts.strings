@@ -1,0 +1,18 @@
+/* Log Purchase phrases */
+"Log purchase in ${applicationName}" = "Записать покупку в ${applicationName}";
+"Add purchase in ${applicationName}" = "Добавить покупку в ${applicationName}";
+"I spent in ${applicationName}" = "Я потратил в ${applicationName}";
+"Log spending in ${applicationName}" = "Записать трату в ${applicationName}";
+"Add expense in ${applicationName}" = "Добавить расход в ${applicationName}";
+
+/* Log Income phrases */
+"Log income in ${applicationName}" = "Записать доход в ${applicationName}";
+"Add income in ${applicationName}" = "Добавить доход в ${applicationName}";
+"Got paid in ${applicationName}" = "Мне заплатили в ${applicationName}";
+"Record income in ${applicationName}" = "Учесть доход в ${applicationName}";
+
+/* Log Transfer phrases */
+"Log transfer in ${applicationName}" = "Записать перевод в ${applicationName}";
+"Move money in ${applicationName}" = "Перевести деньги в ${applicationName}";
+"Add transfer in ${applicationName}" = "Добавить перевод в ${applicationName}";
+"Record transfer in ${applicationName}" = "Учесть перевод в ${applicationName}";
