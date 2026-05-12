@@ -2,6 +2,7 @@ import Auth
 import Debug
 import Dependencies
 import Feed
+import FloatingMic
 import Navigation
 import os.log
 import Profile
@@ -29,21 +30,16 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
     public func start() {
         logger.info("start - Setting up tab bar")
 
-        logger.debug("Creating DashboardView")
         let dashboardNav = makeNavController(
             root: DashboardView().wrapped(),
             title: "Today",
             systemImage: "sun.max.fill"
         )
-
-        logger.debug("Creating FeedView")
         let feedNav = makeNavController(
             root: FeedView().wrapped(),
             title: "Feed",
             systemImage: "magnifyingglass"
         )
-
-        logger.debug("Creating ProfileView")
         let profileNav = makeNavController(
             root: ProfileView(onLogout: onLogout).wrapped(),
             title: "Profile",
@@ -51,12 +47,35 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         )
         self.profileNav = profileNav
 
-        tabBarController.viewControllers = [
-            feedNav,
-            dashboardNav,
-            profileNav,
-        ]
-        tabBarController.selectedIndex = 1
+        let feedTab = UITab(
+            title: "Feed",
+            image: UIImage(systemName: "magnifyingglass"),
+            identifier: Self.feedTabIdentifier
+        ) { _ in feedNav }
+        let dashboardTab = UITab(
+            title: "Today",
+            image: UIImage(systemName: "sun.max.fill"),
+            identifier: Self.dashboardTabIdentifier
+        ) { _ in dashboardNav }
+        let profileTab = UITab(
+            title: "Profile",
+            image: UIImage(systemName: "person.fill"),
+            identifier: Self.profileTabIdentifier
+        ) { _ in profileNav }
+
+        var tabs: [UITab] = [feedTab, dashboardTab, profileTab]
+
+        if #available(iOS 26.0, *) {
+            let micTab = UISearchTab(viewControllerProvider: { _ in UIViewController() })
+            micTab.image = UIImage(systemName: "mic.fill")
+            micTab.title = ""
+            micTab.automaticallyActivatesSearch = false
+            tabs.append(micTab)
+            micTabIdentifier = micTab.identifier
+        }
+
+        tabBarController.tabs = tabs
+        tabBarController.selectedTab = dashboardTab
         tabBarController.delegate = self
         logger.info("Tab bar setup complete")
     }
@@ -65,29 +84,48 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         remove(coordinator)
     }
 
+    @available(iOS 18.0, *)
     public nonisolated func tabBarController(
         _ tabBarController: UITabBarController,
-        shouldSelect viewController: UIViewController
+        shouldSelectTab tab: UITab
     ) -> Bool {
-        Task { @MainActor in
-            self.handleProfileTap(viewController: viewController)
+        let tabIdentifier = tab.identifier
+        let didTriggerMic = MainActor.assumeIsolated {
+            self.handleTabSelection(tabIdentifier: tabIdentifier)
         }
-        return true
+        return !didTriggerMic
     }
 
     // MARK: Private
 
     private let onLogout: (() -> Void)?
+    private let micController = FloatingMicController()
     private weak var profileNav: UINavigationController?
     private var profileTapCount = 0
     private var profileLastTapAt: Date = .distantPast
     private var debugFlow: DebugFlow?
+    private var micTabIdentifier: String?
 
-    private func handleProfileTap(viewController: UIViewController) {
-        guard viewController === profileNav else {
-            profileTapCount = 0
-            return
+    private static let feedTabIdentifier = "ai.dibba.tab.feed"
+    private static let dashboardTabIdentifier = "ai.dibba.tab.dashboard"
+    private static let profileTabIdentifier = "ai.dibba.tab.profile"
+
+    /// Returns `true` if the tap was consumed by the mic tab (and the tab bar
+    /// should not switch).
+    private func handleTabSelection(tabIdentifier: String) -> Bool {
+        if tabIdentifier == micTabIdentifier {
+            micController.tap()
+            return true
         }
+        if tabIdentifier == Self.profileTabIdentifier {
+            handleProfileTap()
+        } else {
+            profileTapCount = 0
+        }
+        return false
+    }
+
+    private func handleProfileTap() {
         let now = Date()
         if now.timeIntervalSince(profileLastTapAt) > 2 {
             profileTapCount = 1

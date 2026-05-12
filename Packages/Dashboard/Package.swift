@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "Dashboard",
     platforms: [
-        .iOS(.v17)
+        .iOS(.v18)
     ],
     products: [
         .library(
@@ -22,6 +22,7 @@ let package = Package(
         .package(path: "../Debug"),
         .package(path: "../Paywall"),
         .package(path: "../Analytics"),
+        .package(path: "../FloatingMic"),
     ],
     targets: [
         .target(
@@ -35,6 +36,7 @@ let package = Package(
                 "Debug",
                 "Paywall",
                 "Analytics",
+                "FloatingMic",
             ]
         ),
         .testTarget(

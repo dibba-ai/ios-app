@@ -302,7 +302,12 @@ final class AppCoordinator: NavigationFlowCoordinating {
     private func syncPaywallAttributes() async {
         let profile = try? await profileService.getProfile(force: false)
         let displayName = profile?.displayName.isEmpty == false ? profile?.displayName : nil
-        let email = profile?.email.isEmpty == false ? profile?.email : (authService.currentUser?.email)
+        let email: String?
+        if let profileEmail = profile?.email, !profileEmail.isEmpty {
+            email = profileEmail
+        } else {
+            email = await authService.currentUser?.email
+        }
         let posthogId = analytics.distinctId
         await paywallService.setUserAttributes(
             displayName: displayName,
