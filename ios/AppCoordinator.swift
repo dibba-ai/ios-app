@@ -71,6 +71,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
             if accountManager.isSignedIn {
                 await paywallService.identify(userId: authService.currentUser?.id)
                 await identifyCurrentUser()
+                await syncPaywallAttributes()
                 await evaluateOnboardingFromProfile()
             }
 
@@ -131,6 +132,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
                 Task {
                     await self.paywallService.identify(userId: self.authService.currentUser?.id)
                     await self.identifyCurrentUser()
+                    await self.syncPaywallAttributes()
                     await self.evaluateOnboardingFromProfile()
                     let state = await self.accountManager.state
                     await MainActor.run {
@@ -295,6 +297,18 @@ final class AppCoordinator: NavigationFlowCoordinating {
         }
 
         analytics.identify(userId: userId, properties: props.isEmpty ? nil : props)
+    }
+
+    private func syncPaywallAttributes() async {
+        let profile = try? await profileService.getProfile(force: false)
+        let displayName = profile?.displayName.isEmpty == false ? profile?.displayName : nil
+        let email = profile?.email.isEmpty == false ? profile?.email : (authService.currentUser?.email)
+        let posthogId = analytics.distinctId
+        await paywallService.setUserAttributes(
+            displayName: displayName,
+            email: email,
+            posthogUserId: posthogId
+        )
     }
 
     private func configurePaywall() async {

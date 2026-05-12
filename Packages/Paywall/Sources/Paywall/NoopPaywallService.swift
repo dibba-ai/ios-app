@@ -8,6 +8,7 @@ public struct NoopPaywallService: PaywallServicing {
     public func configure(apiKey: String) async {}
     public func identify(userId: String?) async {}
     public func logout() async {}
+    public func setUserAttributes(displayName: String?, email: String?, posthogUserId: String?) async {}
 
     public func fetchVariations() async throws -> [PaywallVariation] { [] }
     public func fetchVariation(id: String?) async throws -> PaywallVariation? { nil }

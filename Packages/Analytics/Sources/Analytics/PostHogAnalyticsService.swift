@@ -34,6 +34,11 @@ public struct PostHogAnalyticsService: AnalyticsServicing {
         logger.info("📊 flush")
         PostHogSDK.shared.flush()
     }
+
+    public var distinctId: String? {
+        let id = PostHogSDK.shared.getDistinctId()
+        return id.isEmpty ? nil : id
+    }
 }
 
 // MARK: - Setup Entry Point

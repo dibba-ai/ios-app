@@ -6,6 +6,7 @@
     {
       "layers" : [
         {
+          "glass" : false,
           "hidden" : false,
           "image-name" : "logo_1024.png",
           "name" : "logo_1024",

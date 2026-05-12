@@ -44,6 +44,18 @@ public actor RevenueCatPaywallService: PaywallServicing {
         }
     }
 
+    public func setUserAttributes(displayName: String?, email: String?, posthogUserId: String?) async {
+        guard isConfigured else {
+            logger.warning("setUserAttributes called before configure()")
+            return
+        }
+        let attribution = Purchases.shared.attribution
+        attribution.setDisplayName(displayName)
+        attribution.setEmail(email)
+        attribution.setPostHogUserID(posthogUserId)
+        logger.info("RevenueCat attributes updated")
+    }
+
     public func logout() async {
         guard isConfigured else { return }
         do {

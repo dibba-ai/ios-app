@@ -12,6 +12,10 @@ public protocol PaywallServicing: Sendable {
     /// Switch back to anonymous on sign-out. Clears cached customer info.
     func logout() async
 
+    /// Set RevenueCat reserved + integration attributes ($displayName, $email, $posthogUserId).
+    /// Pass nil to clear any previously set value.
+    func setUserAttributes(displayName: String?, email: String?, posthogUserId: String?) async
+
     /// Fetch all paywall variations (offerings) configured on the dashboard.
     func fetchVariations() async throws -> [PaywallVariation]
 

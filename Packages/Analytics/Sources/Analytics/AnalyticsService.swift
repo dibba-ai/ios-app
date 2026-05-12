@@ -11,6 +11,8 @@ public protocol AnalyticsServicing: Sendable {
     func identify(userId: String, properties: [String: AnyAnalyticsValue]?)
     func reset()
     func flush()
+    /// Current PostHog distinct id (anonymous or identified). `nil` if SDK is unavailable.
+    var distinctId: String? { get }
 }
 
 public extension AnalyticsServicing {
@@ -85,6 +87,8 @@ public struct LoggerAnalyticsService: AnalyticsServicing {
     public func flush() {
         logger.info("analytics flush")
     }
+
+    public var distinctId: String? { nil }
 }
 
 // MARK: - Dependency Registration

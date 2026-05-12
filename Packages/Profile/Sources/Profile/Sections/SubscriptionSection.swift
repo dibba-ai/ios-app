@@ -26,10 +26,9 @@ struct SubscriptionSection: View {
                 LabeledContent("Expires", value: formatProfileDate(expiresAt))
             }
 
-            // TODO: Re-enable once paywall is ready for users.
-            // if !profile.isPremium {
-            //     UpgradePremiumButton()
-            // }
+            if !profile.isPremium {
+                UpgradePremiumButton()
+            }
         }
     }
 }
