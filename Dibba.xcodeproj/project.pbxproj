@@ -477,7 +477,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Dibba;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Save your location when you add purchases manually or using Siri";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Dibba listens to your voice to turn what you say into text — transactions, goals, and notes.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Dibba transcribes what you say so you can capture notes and transactions by voice.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -523,7 +524,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Dibba;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Save your location when you add purchases manually or using Siri";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Dibba listens to your voice to turn what you say into text — transactions, goals, and notes.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Dibba transcribes what you say so you can capture notes and transactions by voice.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

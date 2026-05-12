@@ -23,6 +23,7 @@ let package = Package(
         .package(path: "../Paywall"),
         .package(path: "../Analytics"),
         .package(path: "../FloatingMic"),
+        .package(path: "../VoiceCapture"),
     ],
     targets: [
         .target(
@@ -37,6 +38,7 @@ let package = Package(
                 "Paywall",
                 "Analytics",
                 "FloatingMic",
+                "VoiceCapture",
             ]
         ),
         .testTarget(

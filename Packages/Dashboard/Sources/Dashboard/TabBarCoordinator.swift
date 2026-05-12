@@ -8,6 +8,7 @@ import os.log
 import Profile
 import SwiftUI
 import UIKit
+import VoiceCapture
 
 private let logger = Logger(subsystem: "ai.dibba.ios", category: "TabBarCoordinator")
 
@@ -18,6 +19,17 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
     public init(onLogout: (() -> Void)? = nil) {
         logger.debug("init")
         self.onLogout = onLogout
+
+        if let storage = try? FileSystemRecordingStorage() {
+            let model = VoiceCaptureOverlayModel(storage: storage)
+            self.voiceOverlayModel = model
+            self.voiceOverlayPresenter = VoiceCaptureOverlayPresenter(model: model)
+        } else {
+            self.voiceOverlayModel = nil
+            self.voiceOverlayPresenter = nil
+            logger.error("voice capture storage init failed — mic disabled")
+        }
+
         super.init()
     }
 
@@ -65,18 +77,19 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
 
         var tabs: [UITab] = [feedTab, dashboardTab, profileTab]
 
-        if #available(iOS 26.0, *) {
+        if #available(iOS 26.0, *), voiceOverlayModel != nil {
             let micTab = UISearchTab(viewControllerProvider: { _ in UIViewController() })
             micTab.image = UIImage(systemName: "mic.fill")
             micTab.title = ""
             micTab.automaticallyActivatesSearch = false
             tabs.append(micTab)
-            micTabIdentifier = micTab.identifier
+            storedMicTabIdentifier.set(micTab.identifier)
         }
 
         tabBarController.tabs = tabs
         tabBarController.selectedTab = dashboardTab
         tabBarController.delegate = self
+        scheduleOverlayAttachment()
         logger.info("Tab bar setup complete")
     }
 
@@ -90,39 +103,40 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         shouldSelectTab tab: UITab
     ) -> Bool {
         let tabIdentifier = tab.identifier
-        let didTriggerMic = MainActor.assumeIsolated {
-            self.handleTabSelection(tabIdentifier: tabIdentifier)
+        let micIdentifier = self.storedMicTabIdentifier.value
+        if let micIdentifier, tabIdentifier == micIdentifier {
+            Task { @MainActor in
+                self.voiceOverlayModel?.toggle()
+            }
+            return false
         }
-        return !didTriggerMic
+        Task { @MainActor in
+            self.handleNonMicTabSelection(tabIdentifier: tabIdentifier)
+        }
+        return true
     }
 
     // MARK: Private
 
     private let onLogout: (() -> Void)?
-    private let micController = FloatingMicController()
+    private let voiceOverlayModel: VoiceCaptureOverlayModel?
+    private let voiceOverlayPresenter: VoiceCaptureOverlayPresenter?
     private weak var profileNav: UINavigationController?
     private var profileTapCount = 0
     private var profileLastTapAt: Date = .distantPast
     private var debugFlow: DebugFlow?
-    private var micTabIdentifier: String?
+    private let storedMicTabIdentifier = AtomicString()
 
     private static let feedTabIdentifier = "ai.dibba.tab.feed"
     private static let dashboardTabIdentifier = "ai.dibba.tab.dashboard"
     private static let profileTabIdentifier = "ai.dibba.tab.profile"
 
-    /// Returns `true` if the tap was consumed by the mic tab (and the tab bar
-    /// should not switch).
-    private func handleTabSelection(tabIdentifier: String) -> Bool {
-        if tabIdentifier == micTabIdentifier {
-            micController.tap()
-            return true
-        }
+    private func handleNonMicTabSelection(tabIdentifier: String) {
         if tabIdentifier == Self.profileTabIdentifier {
             handleProfileTap()
         } else {
             profileTapCount = 0
         }
-        return false
     }
 
     private func handleProfileTap() {
@@ -150,6 +164,23 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         flow.start()
     }
 
+    /// Thread-safe string box for reading the mic tab identifier from the
+    /// `UITabBarControllerDelegate` callback without main-actor assumptions.
+    private final class AtomicString: @unchecked Sendable {
+        private let lock = NSLock()
+        private var _value: String?
+
+        var value: String? {
+            lock.lock(); defer { lock.unlock() }
+            return _value
+        }
+
+        func set(_ newValue: String?) {
+            lock.lock(); defer { lock.unlock() }
+            _value = newValue
+        }
+    }
+
     private func makeNavController(
         root: UIViewController,
         title: String,
@@ -162,5 +193,22 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
             tag: 0
         )
         return nav
+    }
+
+    /// Waits for `tabBarController.view` to be attached to a window scene, then
+    /// mounts the voice-capture overlay window above it. Survives tab switches.
+    private func scheduleOverlayAttachment() {
+        guard let voiceOverlayPresenter else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            for _ in 0..<200 {
+                if let scene = self.tabBarController.view.window?.windowScene {
+                    voiceOverlayPresenter.attach(to: scene)
+                    return
+                }
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+            logger.warning("voice overlay attach timed out — no window scene")
+        }
     }
 }
