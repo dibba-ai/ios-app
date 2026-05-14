@@ -8,7 +8,7 @@ import os.log
 import Profile
 import SwiftUI
 import UIKit
-import VoiceCapture
+import VoiceAgent
 
 private let logger = Logger(subsystem: "ai.dibba.ios", category: "TabBarCoordinator")
 
@@ -21,9 +21,9 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         self.onLogout = onLogout
 
         if let storage = try? FileSystemRecordingStorage() {
-            let model = VoiceCaptureOverlayModel(storage: storage)
+            let model = VoiceAgentOverlayModel(storage: storage)
             self.voiceOverlayModel = model
-            self.voiceOverlayPresenter = VoiceCaptureOverlayPresenter(model: model)
+            self.voiceOverlayPresenter = VoiceAgentOverlayPresenter(model: model)
         } else {
             self.voiceOverlayModel = nil
             self.voiceOverlayPresenter = nil
@@ -119,8 +119,8 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
     // MARK: Private
 
     private let onLogout: (() -> Void)?
-    private let voiceOverlayModel: VoiceCaptureOverlayModel?
-    private let voiceOverlayPresenter: VoiceCaptureOverlayPresenter?
+    private let voiceOverlayModel: VoiceAgentOverlayModel?
+    private let voiceOverlayPresenter: VoiceAgentOverlayPresenter?
     private weak var profileNav: UINavigationController?
     private var profileTapCount = 0
     private var profileLastTapAt: Date = .distantPast

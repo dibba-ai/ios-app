@@ -3,23 +3,23 @@
 import PackageDescription
 
 let package = Package(
-    name: "VoiceCapture",
+    name: "VoiceAgent",
     platforms: [
         .iOS(.v18)
     ],
     products: [
         .library(
-            name: "VoiceCapture",
-            targets: ["VoiceCapture"]
+            name: "VoiceAgent",
+            targets: ["VoiceAgent"]
         ),
     ],
     targets: [
         .target(
-            name: "VoiceCapture"
+            name: "VoiceAgent"
         ),
         .testTarget(
-            name: "VoiceCaptureTests",
-            dependencies: ["VoiceCapture"]
+            name: "VoiceAgentTests",
+            dependencies: ["VoiceAgent"]
         ),
     ]
 )

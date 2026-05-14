@@ -2,16 +2,16 @@ import SwiftUI
 import UIKit
 import os.log
 
-private let logger = Logger(subsystem: "ai.dibba.ios", category: "VoiceCapture.Presenter")
+private let logger = Logger(subsystem: "ai.dibba.ios", category: "VoiceAgent.Presenter")
 
 /// Window-level overlay that survives tab switches. Mounts a separate `UIWindow`
 /// above the main window. While visible, captures all touches — the user drives
 /// the recorder via the overlay's own controls (Stop / Play / Discard).
 @MainActor
-public final class VoiceCaptureOverlayPresenter {
-    public let model: VoiceCaptureOverlayModel
+public final class VoiceAgentOverlayPresenter {
+    public let model: VoiceAgentOverlayModel
 
-    public init(model: VoiceCaptureOverlayModel) {
+    public init(model: VoiceAgentOverlayModel) {
         self.model = model
     }
 
@@ -20,7 +20,7 @@ public final class VoiceCaptureOverlayPresenter {
         let overlayWindow = UIWindow(windowScene: scene)
         overlayWindow.windowLevel = .alert + 1
         overlayWindow.backgroundColor = .clear
-        let host = UIHostingController(rootView: VoiceCaptureOverlayView(model: model))
+        let host = UIHostingController(rootView: VoiceAgentOverlayView(model: model))
         host.view.backgroundColor = .clear
         overlayWindow.rootViewController = host
         overlayWindow.isHidden = true

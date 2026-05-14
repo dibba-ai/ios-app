@@ -1,7 +1,7 @@
 import Foundation
 import os.log
 
-private let logger = Logger(subsystem: "ai.dibba.ios", category: "VoiceCapture.Storage")
+private let logger = Logger(subsystem: "ai.dibba.ios", category: "VoiceAgent.Storage")
 
 public protocol RecordingStorage: Sendable {
     /// Returns the URL where the recorder should write audio bytes for a brand new
@@ -19,15 +19,15 @@ public protocol RecordingStorage: Sendable {
     func purgeOlderThan(maxAge: TimeInterval, referenceDate: Date) throws -> Int
 }
 
-/// On-disk implementation: audio files live in `<Documents>/VoiceCapture/`, metadata
+/// On-disk implementation: audio files live in `<Documents>/VoiceAgent/`, metadata
 /// is persisted as a JSON index alongside the files.
 public final class FileSystemRecordingStorage: RecordingStorage, @unchecked Sendable {
-    private static let directoryName = "VoiceCapture"
+    private static let directoryName = "VoiceAgent"
     private static let indexFileName = "index.json"
 
     private let directory: URL
     private let indexURL: URL
-    private let queue = DispatchQueue(label: "ai.dibba.voicecapture.storage")
+    private let queue = DispatchQueue(label: "ai.dibba.voiceagent.storage")
     private let fileManager: FileManager
 
     public init(fileManager: FileManager = .default) throws {

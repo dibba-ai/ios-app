@@ -3,7 +3,7 @@ import Foundation
 import Observation
 import os.log
 
-private let logger = Logger(subsystem: "ai.dibba.ios", category: "VoiceCapture.Overlay")
+private let logger = Logger(subsystem: "ai.dibba.ios", category: "VoiceAgent.Overlay")
 
 /// Lightweight record + playback model that backs the overlay.
 ///
@@ -15,7 +15,7 @@ private let logger = Logger(subsystem: "ai.dibba.ios", category: "VoiceCapture.O
 /// - `error` — non-fatal failure surfaced to UI.
 @MainActor
 @Observable
-public final class VoiceCaptureOverlayModel: NSObject {
+public final class VoiceAgentOverlayModel: NSObject {
     public enum Phase: Sendable, Equatable {
         case idle
         case requestingPermission
@@ -149,7 +149,7 @@ public final class VoiceCaptureOverlayModel: NSObject {
             recorder.isMeteringEnabled = true
             recorder.prepareToRecord()
             guard recorder.record() else {
-                throw NSError(domain: "VoiceCapture", code: -2, userInfo: [NSLocalizedDescriptionKey: "Recorder failed to start"])
+                throw NSError(domain: "VoiceAgent", code: -2, userInfo: [NSLocalizedDescriptionKey: "Recorder failed to start"])
             }
             self.recorder = recorder
             self.currentID = id
@@ -222,7 +222,7 @@ public final class VoiceCaptureOverlayModel: NSObject {
     }
 }
 
-extension VoiceCaptureOverlayModel: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
+extension VoiceAgentOverlayModel: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     public nonisolated func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         logger.info("recorderDidFinishRecording success=\(flag)")
     }

@@ -1,7 +1,7 @@
 import XCTest
-@testable import VoiceCapture
+@testable import VoiceAgent
 
-final class VoiceCaptureTests: XCTestCase {
+final class VoiceAgentTests: XCTestCase {
     func testPlaceholder() {
         XCTAssertTrue(true)
     }

@@ -1,9 +1,9 @@
 import SwiftUI
 
-public struct VoiceCaptureOverlayView: View {
-    @Bindable public var model: VoiceCaptureOverlayModel
+public struct VoiceAgentOverlayView: View {
+    @Bindable public var model: VoiceAgentOverlayModel
 
-    public init(model: VoiceCaptureOverlayModel) {
+    public init(model: VoiceAgentOverlayModel) {
         self.model = model
     }
 
