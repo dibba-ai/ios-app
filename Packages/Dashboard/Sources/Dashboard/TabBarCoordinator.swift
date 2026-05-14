@@ -1,3 +1,4 @@
+import ApiClient
 import Auth
 import Debug
 import Dependencies
@@ -20,15 +21,10 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         logger.debug("init")
         self.onLogout = onLogout
 
-        if let storage = try? FileSystemRecordingStorage() {
-            let model = VoiceAgentOverlayModel(storage: storage)
-            self.voiceOverlayModel = model
-            self.voiceOverlayPresenter = VoiceAgentOverlayPresenter(model: model)
-        } else {
-            self.voiceOverlayModel = nil
-            self.voiceOverlayPresenter = nil
-            logger.error("voice capture storage init failed — mic disabled")
-        }
+        @Dependency(\.apiClient) var apiClient
+        let model = VoiceAgentOverlayModel(apiClient: apiClient)
+        self.voiceOverlayModel = model
+        self.voiceOverlayPresenter = VoiceAgentOverlayPresenter(model: model)
 
         super.init()
     }
@@ -77,7 +73,7 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
 
         var tabs: [UITab] = [feedTab, dashboardTab, profileTab]
 
-        if #available(iOS 26.0, *), voiceOverlayModel != nil {
+        if #available(iOS 26.0, *) {
             let micTab = UISearchTab(viewControllerProvider: { _ in UIViewController() })
             micTab.image = UIImage(systemName: "mic.fill")
             micTab.title = ""
@@ -106,7 +102,7 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         let micIdentifier = self.storedMicTabIdentifier.value
         if let micIdentifier, tabIdentifier == micIdentifier {
             Task { @MainActor in
-                self.voiceOverlayModel?.toggle()
+                self.voiceOverlayModel.toggle()
             }
             return false
         }
@@ -119,8 +115,8 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
     // MARK: Private
 
     private let onLogout: (() -> Void)?
-    private let voiceOverlayModel: VoiceAgentOverlayModel?
-    private let voiceOverlayPresenter: VoiceAgentOverlayPresenter?
+    private let voiceOverlayModel: VoiceAgentOverlayModel
+    private let voiceOverlayPresenter: VoiceAgentOverlayPresenter
     private weak var profileNav: UINavigationController?
     private var profileTapCount = 0
     private var profileLastTapAt: Date = .distantPast
@@ -198,12 +194,11 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
     /// Waits for `tabBarController.view` to be attached to a window scene, then
     /// mounts the voice-capture overlay window above it. Survives tab switches.
     private func scheduleOverlayAttachment() {
-        guard let voiceOverlayPresenter else { return }
         Task { @MainActor [weak self] in
             guard let self else { return }
             for _ in 0..<200 {
                 if let scene = self.tabBarController.view.window?.windowScene {
-                    voiceOverlayPresenter.attach(to: scene)
+                    self.voiceOverlayPresenter.attach(to: scene)
                     return
                 }
                 try? await Task.sleep(for: .milliseconds(50))

@@ -203,11 +203,21 @@ public final class GraphQLClient: GraphQLClientProtocol, @unchecked Sendable {
             throw APIClientError.http(httpResponse.statusCode)
         }
 
-        // Decode response
+        // Decode response. If the full-shape decode fails, fall back to inspecting
+        // just the `errors` array — this surfaces GraphQL-side errors even when the
+        // returned `data` payload is null and would otherwise fail a strict decode.
         let graphQLResponse: GraphQLResponse<T>
         do {
             graphQLResponse = try decoder.decode(GraphQLResponse<T>.self, from: data)
         } catch {
+            if let envelope = try? decoder.decode(ErrorsOnlyEnvelope.self, from: data),
+               let errors = envelope.errors, !errors.isEmpty {
+                logger.error("[\(operationName ?? "unknown")] GraphQL errors (data unparseable): \(errors.map { $0.message }.joined(separator: ", "))")
+                if errors.contains(where: { $0.errorType == "401" || $0.errorType == "UNAUTHORIZED" }) {
+                    throw APIClientError.unauthorized
+                }
+                throw APIClientError.graphQLErrors(errors)
+            }
             logger.error("[\(operationName ?? "unknown")] Decoding error: \(error.localizedDescription)")
             throw APIClientError.decodingError(error.localizedDescription)
         }
@@ -297,4 +307,13 @@ public final class GraphQLClient: GraphQLClientProtocol, @unchecked Sendable {
 
 public protocol TokenProviding: Sendable {
     func getToken(forceRefresh: Bool) async throws -> String
+}
+
+// MARK: - Errors-Only Envelope
+
+/// Used to extract GraphQL errors from a response whose `data` payload doesn't
+/// match the expected `T` shape (typically because the server returned `null`
+/// data alongside a top-level error).
+private struct ErrorsOnlyEnvelope: Decodable {
+    let errors: [GraphQLError]?
 }

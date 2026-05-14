@@ -16,26 +16,28 @@ public struct VoiceAgentOverlayView: View {
     private var content: some View {
         ZStack {
             backgroundLayer
-            VStack(alignment: .center, spacing: 28) {
-                Spacer()
+            VStack(spacing: 24) {
                 statusPill
-                controls
-                Spacer().frame(height: 80)
+                transcriptArea
+                Spacer()
+                stopButton
+                    .padding(.bottom, 80)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.top, 60)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
     }
 
     @ViewBuilder
     private var backgroundLayer: some View {
         switch model.phase {
-        case .recording:
+        case .live:
             ZStack {
                 Color.black.opacity(0.55).ignoresSafeArea()
                 EdgeGlowView(level: model.level)
             }
         default:
-            Color.black.opacity(0.45).ignoresSafeArea()
+            Color.black.opacity(0.55).ignoresSafeArea()
         }
     }
 
@@ -46,59 +48,73 @@ public struct VoiceAgentOverlayView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 18)
             .padding(.vertical, 10)
-            .background(Capsule().fill(Color.orange))
+            .background(Capsule().fill(statusColor))
     }
 
     private var statusText: String {
         switch model.phase {
         case .idle: return "Idle"
+        case .connecting: return "Connecting…"
         case .requestingPermission: return "Requesting permission…"
-        case .recording: return "Recording — tap stop"
-        case .recorded: return "Recorded — tap play"
+        case .live: return "Listening"
         case .error(let msg): return msg
         }
     }
 
-    @ViewBuilder
-    private var controls: some View {
+    private var statusColor: Color {
         switch model.phase {
-        case .recording:
-            Button(action: { model.toggle() }) {
+        case .error: return .red.opacity(0.85)
+        case .live: return .orange
+        default: return .orange.opacity(0.7)
+        }
+    }
+
+    @ViewBuilder
+    private var transcriptArea: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if !model.userTranscript.isEmpty {
+                transcriptBubble(label: "You", text: model.userTranscript, align: .trailing)
+            }
+            if !model.assistantTranscript.isEmpty {
+                transcriptBubble(label: "Dibba", text: model.assistantTranscript, align: .leading)
+            }
+        }
+        .padding(.horizontal, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func transcriptBubble(label: String, text: String, align: HorizontalAlignment) -> some View {
+        VStack(alignment: align, spacing: 4) {
+            Text(label)
+                .font(.caption2)
+                .fontWeight(.semibold)
+                .foregroundStyle(.white.opacity(0.7))
+            Text(text)
+                .font(.body)
+                .foregroundStyle(.white)
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(.thinMaterial)
+                )
+        }
+        .frame(maxWidth: .infinity, alignment: align == .trailing ? .trailing : .leading)
+    }
+
+    @ViewBuilder
+    private var stopButton: some View {
+        switch model.phase {
+        case .live, .connecting, .requestingPermission:
+            Button(action: { model.stop() }) {
                 Image(systemName: "stop.fill")
-                    .font(.system(size: 32, weight: .semibold))
+                    .font(.system(size: 30, weight: .semibold))
                     .foregroundStyle(.white)
-                    .frame(width: 88, height: 88)
+                    .frame(width: 80, height: 80)
                     .background(Circle().fill(Color.red))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Stop recording")
-        case .recorded:
-            HStack(spacing: 28) {
-                Button(action: { model.togglePlayback() }) {
-                    Image(systemName: model.isPlaying ? "stop.fill" : "play.fill")
-                        .font(.system(size: 28, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 72, height: 72)
-                        .background(Circle().fill(Color.orange))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(model.isPlaying ? "Stop playback" : "Play recording")
-
-                Button(action: { model.discard() }) {
-                    Image(systemName: "trash.fill")
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 72, height: 72)
-                        .background(Circle().fill(Color.red.opacity(0.85)))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Discard recording")
-            }
-        case .error:
-            Button("Close", action: { model.discard() })
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
-        case .requestingPermission, .idle:
+            .accessibilityLabel("End voice session")
+        case .error, .idle:
             EmptyView()
         }
     }

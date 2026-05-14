@@ -1,3 +1,4 @@
+import ApiClient
 import AVFoundation
 import Foundation
 import Observation
@@ -5,49 +6,43 @@ import os.log
 
 private let logger = Logger(subsystem: "ai.dibba.ios", category: "VoiceAgent.Overlay")
 
-/// Lightweight record + playback model that backs the overlay.
+/// Top-level state machine for the realtime voice-agent overlay.
 ///
-/// Phases:
-/// - `idle` — overlay hidden.
-/// - `requestingPermission` — waiting for the mic permission prompt.
-/// - `recording` — actively capturing audio to `audioURL`.
-/// - `recorded` — recording finished, file ready for playback.
-/// - `error` — non-fatal failure surfaced to UI.
+/// Tap flow (`toggle()`):
+/// 1. Visible flips on instantly so the overlay + glow render before any
+///    network or mic activity.
+/// 2. Creates a realtime session via the backend mutation.
+/// 3. On success: requests mic permission, opens WebRTC, switches to `.live`.
+/// 4. On failure: surfaces an error pill, auto-dismisses after a short delay.
 @MainActor
 @Observable
-public final class VoiceAgentOverlayModel: NSObject {
+public final class VoiceAgentOverlayModel {
     public enum Phase: Sendable, Equatable {
         case idle
+        case connecting
         case requestingPermission
-        case recording(URL)
-        case recorded(URL)
+        case live
         case error(String)
     }
 
     public private(set) var phase: Phase = .idle
     public private(set) var visible: Bool = false
-    public private(set) var isPlaying: Bool = false
+    public private(set) var assistantTranscript: String = ""
+    public private(set) var userTranscript: String = ""
 
-    /// 0…1 smoothed audio level for glow. Updated ~30Hz while recording.
+    /// Mic level (0…1) used by the edge glow. Not yet sourced from WebRTC stats —
+    /// reserved for a follow-up; currently breathes via the glow's internal driver.
     public private(set) var level: Float = 0
 
-    public init(storage: RecordingStorage) {
-        self.storage = storage
-        super.init()
-        try? storage.purgeOlderThan(maxAge: 60 * 60 * 24 * 30, referenceDate: Date())
+    public init(apiClient: any APIClienting, defaultVoice: String = "openai_sage") {
+        self.apiClient = apiClient
+        self.defaultVoice = defaultVoice
     }
 
     /// Single entry point bound to the mic tab tap.
     public func toggle() {
         if visible {
-            switch phase {
-            case .recording:
-                stopRecording()
-            case .recorded, .error:
-                hide()
-            case .idle, .requestingPermission:
-                hide()
-            }
+            stop()
         } else {
             show()
         }
@@ -56,181 +51,167 @@ public final class VoiceAgentOverlayModel: NSObject {
     public func show() {
         guard !visible else { return }
         visible = true
-        Task { await self.beginRecording() }
+        phase = .connecting
+        assistantTranscript = ""
+        userTranscript = ""
+        Task { await self.beginSession() }
     }
 
-    public func hide() {
-        stopMeteringTimer()
-        stopPlayback()
-        if recorder?.isRecording == true {
-            recorder?.stop()
-        }
-        recorder = nil
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        if case .recording(let url) = phase {
-            try? FileManager.default.removeItem(at: url)
-        }
-        visible = false
+    public func stop() {
+        cancelTasks()
+        realtimeClient?.disconnect()
+        realtimeClient = nil
         phase = .idle
+        visible = false
     }
 
-    public func togglePlayback() {
-        guard case .recorded(let url) = phase else { return }
-        if isPlaying {
-            player?.stop()
-            player = nil
-            isPlaying = false
+    // MARK: - Private
+
+    private let apiClient: any APIClienting
+    private let defaultVoice: String
+    private var realtimeClient: RealtimeClient?
+    private var eventTask: Task<Void, Never>?
+    private var stateTask: Task<Void, Never>?
+    private var levelTask: Task<Void, Never>?
+
+    private func resolveVoice() async -> String {
+        do {
+            let profile = try await apiClient.getProfile()
+            if let voice = profile.favoriteRealtimeVoice, !voice.isEmpty {
+                return voice
+            }
+        } catch {
+            logger.warning("profile fetch failed, using default voice: \(error.localizedDescription)")
+        }
+        return defaultVoice
+    }
+
+    private func beginSession() async {
+        let voice = await resolveVoice()
+        let session: RealtimeSessionDTO
+        do {
+            session = try await apiClient.createRealtimeSession(
+                input: CreateRealtimeSessionInput(voice: voice)
+            )
+        } catch {
+            logger.error("createRealtimeSession failed: \(error.localizedDescription)")
+            fail(with: Self.userFacingMessage(for: error))
             return
         }
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-            try AVAudioSession.sharedInstance().setActive(true)
-            let p = try AVAudioPlayer(contentsOf: url)
-            p.delegate = self
-            p.prepareToPlay()
-            p.play()
-            player = p
-            isPlaying = true
-        } catch {
-            logger.error("playback failed: \(error.localizedDescription)")
-            phase = .error("Playback failed.")
+        guard let endpoint = URL(string: session.endpoint) else {
+            logger.error("invalid endpoint: \(session.endpoint)")
+            fail(with: "Voice agent endpoint invalid.")
+            return
         }
-    }
 
-    public func discard() {
-        stopMeteringTimer()
-        stopPlayback()
-        if case .recorded(let url) = phase {
-            try? FileManager.default.removeItem(at: url)
-        }
-        if recorder?.isRecording == true {
-            recorder?.stop()
-        }
-        recorder = nil
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        visible = false
-        phase = .idle
-    }
-
-    // MARK: Private
-
-    private let storage: RecordingStorage
-    private var recorder: AVAudioRecorder?
-    private var player: AVAudioPlayer?
-
-    private func beginRecording() async {
         phase = .requestingPermission
-        let granted: Bool
-        if #available(iOS 17.0, *) {
-            granted = await AVAudioApplication.requestRecordPermission()
-        } else {
-            granted = await withCheckedContinuation { cont in
-                AVAudioSession.sharedInstance().requestRecordPermission { cont.resume(returning: $0) }
-            }
-        }
-        guard granted else {
+        let micGranted = await Self.requestMicrophonePermission()
+        guard micGranted else {
             logger.warning("mic permission denied")
-            phase = .error("Microphone permission denied.")
+            fail(with: "Microphone permission denied.")
             return
         }
+
+        let client = RealtimeClient()
+        realtimeClient = client
+        subscribeToClient(client)
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default)
-            try AVAudioSession.sharedInstance().setActive(true)
-            let id = UUID()
-            let url = storage.makeAudioURL(for: id).deletingPathExtension().appendingPathExtension("m4a")
-            let settings: [String: Any] = [
-                AVFormatIDKey: kAudioFormatMPEG4AAC,
-                AVSampleRateKey: 16000,
-                AVNumberOfChannelsKey: 1,
-                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
-            ]
-            let recorder = try AVAudioRecorder(url: url, settings: settings)
-            recorder.delegate = self
-            recorder.isMeteringEnabled = true
-            recorder.prepareToRecord()
-            guard recorder.record() else {
-                throw NSError(domain: "VoiceAgent", code: -2, userInfo: [NSLocalizedDescriptionKey: "Recorder failed to start"])
-            }
-            self.recorder = recorder
-            self.currentID = id
-            self.startedAt = Date()
-            phase = .recording(url)
-            logger.info("recording to \(url.lastPathComponent)")
-            startMeteringTimer()
+            try await client.connect(endpoint: endpoint, token: session.token)
         } catch {
-            logger.error("recording setup failed: \(error.localizedDescription)")
-            phase = .error("Recording failed: \(error.localizedDescription)")
+            logger.error("WebRTC connect failed: \(error.localizedDescription)")
+            fail(with: "Couldn't connect to voice agent.")
+            return
         }
+        phase = .live
     }
 
-    private func stopRecording() {
-        guard case .recording(let url) = phase, let recorder else { return }
-        stopMeteringTimer()
-        recorder.stop()
-        self.recorder = nil
-        let duration = startedAt.map { Date().timeIntervalSince($0) } ?? 0
-        let metadata = RecordingMetadata(
-            id: currentID ?? UUID(),
-            createdAt: startedAt ?? Date(),
-            duration: duration,
-            transcript: "",
-            status: .recorded,
-            audioFileName: url.lastPathComponent
-        )
-        try? storage.save(metadata)
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        phase = .recorded(url)
-        logger.info("recording stopped — \(duration.rounded(.toNearestOrEven))s")
-    }
-
-    private func stopPlayback() {
-        player?.stop()
-        player = nil
-        isPlaying = false
-    }
-
-    private var currentID: UUID?
-    private var startedAt: Date?
-    private var meteringTimer: Timer?
-
-    private func startMeteringTimer() {
-        meteringTimer?.invalidate()
-        meteringTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.updateMeteredLevel()
+    private func subscribeToClient(_ client: RealtimeClient) {
+        eventTask?.cancel()
+        stateTask?.cancel()
+        levelTask?.cancel()
+        eventTask = Task { [weak self] in
+            for await event in client.events {
+                guard let self else { return }
+                self.handle(event: event)
+            }
+        }
+        stateTask = Task { [weak self] in
+            for await state in client.states {
+                guard let self else { return }
+                switch state {
+                case .failed(let reason):
+                    self.fail(with: "Connection lost: \(reason)")
+                case .closed:
+                    if self.visible { self.stop() }
+                default:
+                    break
+                }
+            }
+        }
+        levelTask = Task { [weak self] in
+            for await levels in client.audioLevels {
+                self?.level = levels.combined
             }
         }
     }
 
-    private func stopMeteringTimer() {
-        meteringTimer?.invalidate()
-        meteringTimer = nil
+    private func handle(event: RealtimeEvent) {
+        switch event {
+        case .assistantTranscriptDelta(_, let text):
+            assistantTranscript += text
+        case .assistantTranscriptCompleted(_, let text):
+            assistantTranscript = text
+        case .userTranscriptCompleted(_, let text):
+            userTranscript = text
+        case .error(let message):
+            fail(with: message)
+        case .unknown:
+            break
+        }
+    }
+
+    private func fail(with message: String) {
+        cancelTasks()
+        realtimeClient?.disconnect()
+        realtimeClient = nil
+        phase = .error(message)
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            guard let self, case .error = self.phase else { return }
+            self.visible = false
+            self.phase = .idle
+        }
+    }
+
+    private func cancelTasks() {
+        eventTask?.cancel()
+        stateTask?.cancel()
+        levelTask?.cancel()
+        eventTask = nil
+        stateTask = nil
+        levelTask = nil
         level = 0
     }
 
-    private func updateMeteredLevel() {
-        guard let recorder, recorder.isRecording else { return }
-        recorder.updateMeters()
-        // averagePower returns dBFS in the range [-160, 0]; convert to a 0…1 linear
-        // scale with a noise floor at -50 dB so the glow doesn't react to room hiss.
-        let db = recorder.averagePower(forChannel: 0)
-        let floor: Float = -50
-        let clampedDb = max(floor, min(db, 0))
-        let normalized = (clampedDb - floor) / -floor // -50→0, 0→1
-        let smoothed = level + (normalized - level) * 0.35
-        level = max(0, min(1, smoothed))
-    }
-}
-
-extension VoiceAgentOverlayModel: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
-    public nonisolated func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
-        logger.info("recorderDidFinishRecording success=\(flag)")
+    /// Distil any error from the backend / network into a one-line message we can
+    /// show in the status pill. Falls back to a generic message if the error
+    /// doesn't carry a human-readable description.
+    private static func userFacingMessage(for error: Error) -> String {
+        if let apiError = error as? APIClientError, let desc = apiError.errorDescription {
+            return desc
+        }
+        let localised = error.localizedDescription
+        if !localised.isEmpty { return localised }
+        return "Voice agent unavailable. Try again later."
     }
 
-    public nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        Task { @MainActor in
-            self.isPlaying = false
-            self.player = nil
+    private static func requestMicrophonePermission() async -> Bool {
+        if #available(iOS 17.0, *) {
+            return await AVAudioApplication.requestRecordPermission()
+        } else {
+            return await withCheckedContinuation { cont in
+                AVAudioSession.sharedInstance().requestRecordPermission { cont.resume(returning: $0) }
+            }
         }
     }
 }

@@ -37,6 +37,7 @@ public protocol APIClienting: Sendable {
 
     // Realtime
     func getRealtimeOptions() async throws -> RealtimeOptionsDTO
+    func createRealtimeSession(input: CreateRealtimeSessionInput) async throws -> RealtimeSessionDTO
 }
 
 // MARK: - API Client Implementation
@@ -191,6 +192,21 @@ public final class APIClient: APIClienting, @unchecked Sendable {
             operationName: "realtimeOptions"
         )
         return response.realtimeOptions
+    }
+
+    public func createRealtimeSession(input: CreateRealtimeSessionInput) async throws -> RealtimeSessionDTO {
+        let response: CreateRealtimeSessionResponse = try await apiClient.execute(
+            query: RealtimeQueries.createRealtimeSession(
+                provider: input.provider,
+                voice: input.voice
+            ),
+            variables: EmptyVariables(),
+            operationName: "createRealtimeSession"
+        )
+        guard let session = response.createRealtimeSession else {
+            throw APIClientError.noData
+        }
+        return session
     }
 }
 
@@ -393,5 +409,16 @@ public final class MockAPIClient: APIClienting, @unchecked Sendable {
 
     public func getRealtimeOptions() async throws -> RealtimeOptionsDTO {
         RealtimeOptionsDTO(voices: [])
+    }
+
+    public func createRealtimeSession(input: CreateRealtimeSessionInput) async throws -> RealtimeSessionDTO {
+        RealtimeSessionDTO(
+            id: UUID().uuidString,
+            endpoint: "https://example.com/mock",
+            model: "mock-model",
+            provider: input.provider,
+            token: "mock-token",
+            tokenExpiresAt: nil
+        )
     }
 }
