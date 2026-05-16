@@ -5,6 +5,7 @@ import Foundation
 import os.log
 import Servicing
 import SwiftUI
+import VoiceAgentCallKit
 
 private let logger = Logger(subsystem: "ai.dibba.ios", category: "DebugView")
 
@@ -22,7 +23,9 @@ struct DebugView: View {
 
     @State private var profile: Servicing.Profile?
     @State private var authUser: AuthUser?
+    @State private var accessToken: String?
     @State private var profileJSONExpanded = false
+    @AppStorage(VoiceAgentModePreference.key) private var voiceAgentMode: String = VoiceAgentMode.overlay.rawValue
     @State private var copiedLabel: String?
     @State private var showCacheResetConfirmation = false
     @State private var showCacheResetSuccess = false
@@ -33,8 +36,24 @@ struct DebugView: View {
         List {
             Section("User") {
                 copyRow("ID", value: authUser?.id ?? "—")
+                copyRow("JWT", value: accessToken ?? "—")
                 copyRow("Email", value: authUser?.email ?? profile?.email ?? "—")
                 copyRow("Name", value: authUser?.name ?? profile?.name ?? "—")
+            }
+
+            Section("Voice Agent") {
+                Picker("Implementation", selection: $voiceAgentMode) {
+                    ForEach(VoiceAgentMode.allCases, id: \.rawValue) { mode in
+                        Text(mode.displayName).tag(mode.rawValue)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+
+            Section("Plan") {
+                copyRow("Plan", value: planLabel)
+                copyRow("Starts At", value: formatDate(profile?.planStartsAt))
+                copyRow("Expires At", value: formatDate(profile?.planExpiresAt))
             }
 
             Section("Profile JSON") {
@@ -159,6 +178,16 @@ struct DebugView: View {
         }
     }
 
+    private var planLabel: String {
+        guard let plan = profile?.plan else { return "—" }
+        return "\(plan.displayName) (\(plan.rawValue))"
+    }
+
+    private func formatDate(_ date: Date?) -> String {
+        guard let date else { return "—" }
+        return date.formatted(.iso8601)
+    }
+
     private var profileJSON: String {
         guard let profile else { return "{}" }
         let encoder = JSONEncoder()
@@ -178,6 +207,12 @@ struct DebugView: View {
             logger.error("DebugView profile load failed: \(error.localizedDescription)")
         }
         authUser = await authService.currentUser
+        do {
+            accessToken = try await authService.accessToken()
+        } catch {
+            logger.error("DebugView access token load failed: \(error.localizedDescription)")
+            accessToken = nil
+        }
     }
 
     @MainActor

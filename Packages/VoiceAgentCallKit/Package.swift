@@ -3,37 +3,32 @@
 import PackageDescription
 
 let package = Package(
-    name: "VoiceAgent",
+    name: "VoiceAgentCallKit",
     platforms: [
         .iOS(.v18)
     ],
     products: [
         .library(
-            name: "VoiceAgent",
-            targets: ["VoiceAgent"]
+            name: "VoiceAgentCallKit",
+            targets: ["VoiceAgentCallKit"]
         ),
     ],
     dependencies: [
         .package(path: "../ApiClient"),
-        .package(
-            url: "https://github.com/livekit/webrtc-xcframework",
-            from: "144.7559.06"
-        ),
+        .package(path: "../Core"),
+        .package(path: "../VoiceAgent"),
     ],
     targets: [
         .target(
-            name: "VoiceAgent",
+            name: "VoiceAgentCallKit",
             dependencies: [
                 "ApiClient",
-                .product(name: "LiveKitWebRTC", package: "webrtc-xcframework"),
+                "Core",
+                "VoiceAgent",
             ],
             resources: [
                 .process("Resources"),
             ]
-        ),
-        .testTarget(
-            name: "VoiceAgentTests",
-            dependencies: ["VoiceAgent"]
         ),
     ]
 )

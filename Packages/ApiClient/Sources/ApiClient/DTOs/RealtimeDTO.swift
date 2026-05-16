@@ -54,10 +54,12 @@ public struct RealtimeSessionDTO: Codable, Sendable {
 public struct CreateRealtimeSessionInput: Codable, Sendable {
     public let provider: String
     public let voice: String
+    public let vibe: String?
 
-    public init(provider: String = "openai", voice: String) {
+    public init(provider: String = "openai", voice: String, vibe: String? = nil) {
         self.provider = provider
         self.voice = voice
+        self.vibe = vibe
     }
 }
 

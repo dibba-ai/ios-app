@@ -61,11 +61,13 @@ public final class RealtimeClient: NSObject {
         super.init()
     }
 
-    public func connect(endpoint: URL, token: String) async throws {
+    public func connect(endpoint: URL, token: String, audioSessionPreActivated: Bool = false) async throws {
         emitState(.connecting)
 
         // 1. Configure audio session for VoIP-style playback + record.
-        try configureAudioSession()
+        // When CallKit owns the audio session, it activates first and we only
+        // need to set our category preferences.
+        try configureAudioSession(skipActivation: audioSessionPreActivated)
 
         // 2. Build peer connection with default config + mic track + data channel.
         let pc = try makePeerConnection()
@@ -172,6 +174,17 @@ public final class RealtimeClient: NSObject {
         emitState(.closed)
     }
 
+    public func setMicMuted(_ muted: Bool) {
+        audioTrack?.isEnabled = !muted
+    }
+
+    public func setSpeakerEnabled(_ enabled: Bool) {
+        let rtcSession = LKRTCAudioSession.sharedInstance()
+        rtcSession.lockForConfiguration()
+        defer { rtcSession.unlockForConfiguration() }
+        try? rtcSession.overrideOutputAudioPort(enabled ? .speaker : .none)
+    }
+
     // MARK: - Private
 
     private let eventContinuation: AsyncStream<RealtimeEvent>.Continuation
@@ -198,7 +211,7 @@ public final class RealtimeClient: NSObject {
         stateContinuation.yield(state)
     }
 
-    private func configureAudioSession() throws {
+    private func configureAudioSession(skipActivation: Bool = false) throws {
         // Keep WebRTC's default `.voiceChat` mode so its echo cancellation /
         // AGC / mic capture pipeline isn't disturbed (changing mode broke both
         // input metering and remote audio rendering). We only override:
@@ -210,6 +223,15 @@ public final class RealtimeClient: NSObject {
         LKRTCAudioSessionConfiguration.setWebRTC(config)
 
         let rtcSession = LKRTCAudioSession.sharedInstance()
+        if skipActivation {
+            // CallKit owns the AVAudioSession active state. Touching it via
+            // setConfiguration(_:active:) races CallKit and triggers
+            // "Session deactivation failed". Leave it alone — the global
+            // config we set via setWebRTC(_:) is what RTC will use when it
+            // attaches the mic track.
+            try? rtcSession.overrideOutputAudioPort(.speaker)
+            return
+        }
         rtcSession.lockForConfiguration()
         defer { rtcSession.unlockForConfiguration() }
         try rtcSession.setConfiguration(config, active: true)

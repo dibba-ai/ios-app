@@ -24,6 +24,7 @@ let package = Package(
         .package(path: "../Analytics"),
         .package(path: "../FloatingMic"),
         .package(path: "../VoiceAgent"),
+        .package(path: "../VoiceAgentCallKit"),
     ],
     targets: [
         .target(
@@ -39,6 +40,7 @@ let package = Package(
                 "Analytics",
                 "FloatingMic",
                 "VoiceAgent",
+                "VoiceAgentCallKit",
             ]
         ),
         .testTarget(

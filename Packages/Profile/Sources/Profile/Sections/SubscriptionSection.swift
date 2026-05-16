@@ -10,16 +10,10 @@ struct SubscriptionSection: View {
             LabeledContent("Plan") {
                 HStack(spacing: 4) {
                     if profile.isPremium {
-                        Image(systemName: "star.fill")
-                            .foregroundStyle(.yellow)
-                            .font(.caption)
+                        Text("⭐️")
                     }
                     Text(profile.plan.displayName)
                 }
-            }
-
-            if let startsAt = profile.planStartsAt {
-                LabeledContent("Started", value: formatProfileDate(startsAt))
             }
 
             if let expiresAt = profile.planExpiresAt {

@@ -15,6 +15,7 @@ public struct ProfileDTO: Codable, Sendable {
     public let notifyAnnualReport: Bool?
     public let notifyNewRecommendation: Bool?
     public let favoriteRealtimeVoice: String?
+    public let favoriteVibe: String?
     public let achievements: [ProfileAchievementDTO]?
     public let createdAt: Date?
     public let email: String?
@@ -35,6 +36,7 @@ public struct ProfileDTO: Codable, Sendable {
         case notifyAnnualReport = "notify_annual_report"
         case notifyNewRecommendation = "notify_new_recommendation"
         case favoriteRealtimeVoice = "favorite_realtime_voice"
+        case favoriteVibe = "favorite_vibe"
         case achievements
         case createdAt = "created_at"
         case email, name
@@ -78,6 +80,7 @@ public struct UpdateProfileInput: Encodable, Sendable {
     public var notifyAnnualReport: Bool?
     public var notifyNewRecommendation: Bool?
     public var favoriteRealtimeVoice: String?
+    public var favoriteVibe: String?
     public var name: String?
     public var picture: String?
     public var timezone: String?
@@ -95,6 +98,7 @@ public struct UpdateProfileInput: Encodable, Sendable {
         notifyAnnualReport: Bool? = nil,
         notifyNewRecommendation: Bool? = nil,
         favoriteRealtimeVoice: String? = nil,
+        favoriteVibe: String? = nil,
         name: String? = nil,
         picture: String? = nil,
         timezone: String? = nil
@@ -111,6 +115,7 @@ public struct UpdateProfileInput: Encodable, Sendable {
         self.notifyAnnualReport = notifyAnnualReport
         self.notifyNewRecommendation = notifyNewRecommendation
         self.favoriteRealtimeVoice = favoriteRealtimeVoice
+        self.favoriteVibe = favoriteVibe
         self.name = name
         self.picture = picture
         self.timezone = timezone
@@ -124,6 +129,7 @@ public struct UpdateProfileInput: Encodable, Sendable {
         case notifyAnnualReport = "notify_annual_report"
         case notifyNewRecommendation = "notify_new_recommendation"
         case favoriteRealtimeVoice = "favorite_realtime_voice"
+        case favoriteVibe = "favorite_vibe"
         case name, picture, timezone
     }
 }

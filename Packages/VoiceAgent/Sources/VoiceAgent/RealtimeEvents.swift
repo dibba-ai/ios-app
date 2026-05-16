@@ -8,8 +8,12 @@ public enum RealtimeEvent: Sendable {
     case assistantTranscriptDelta(itemId: String, text: String)
     /// Final assistant transcript for an output item.
     case assistantTranscriptCompleted(itemId: String, text: String)
+    /// Streaming user transcript chunk (input audio transcription).
+    case userTranscriptDelta(itemId: String, text: String)
     /// Final user transcript (from input audio).
     case userTranscriptCompleted(itemId: String, text: String)
+    /// Inbound (assistant) audio stream finished playing for an output item.
+    case audioOutputDone(itemId: String)
     /// Server-side error payload.
     case error(message: String)
     /// Catch-all so non-decoded events still propagate.
@@ -18,18 +22,28 @@ public enum RealtimeEvent: Sendable {
     public init?(json: [String: Any]) {
         guard let type = json["type"] as? String else { return nil }
         switch type {
-        case "response.audio_transcript.delta":
+        case "response.audio_transcript.delta",
+             "response.output_audio_transcript.delta":
             let itemId = (json["item_id"] as? String) ?? ""
             let delta = (json["delta"] as? String) ?? ""
             self = .assistantTranscriptDelta(itemId: itemId, text: delta)
-        case "response.audio_transcript.done":
+        case "response.audio_transcript.done",
+             "response.output_audio_transcript.done":
             let itemId = (json["item_id"] as? String) ?? ""
             let transcript = (json["transcript"] as? String) ?? ""
             self = .assistantTranscriptCompleted(itemId: itemId, text: transcript)
+        case "conversation.item.input_audio_transcription.delta":
+            let itemId = (json["item_id"] as? String) ?? ""
+            let delta = (json["delta"] as? String) ?? ""
+            self = .userTranscriptDelta(itemId: itemId, text: delta)
         case "conversation.item.input_audio_transcription.completed":
             let itemId = (json["item_id"] as? String) ?? ""
             let transcript = (json["transcript"] as? String) ?? ""
             self = .userTranscriptCompleted(itemId: itemId, text: transcript)
+        case "response.audio.done",
+             "response.output_audio.done":
+            let itemId = (json["item_id"] as? String) ?? ""
+            self = .audioOutputDone(itemId: itemId)
         case "error":
             let err = json["error"] as? [String: Any]
             let message = (err?["message"] as? String) ?? "Realtime error"

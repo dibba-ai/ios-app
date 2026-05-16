@@ -10,6 +10,7 @@ import Profile
 import SwiftUI
 import UIKit
 import VoiceAgent
+import VoiceAgentCallKit
 
 private let logger = Logger(subsystem: "ai.dibba.ios", category: "TabBarCoordinator")
 
@@ -25,6 +26,9 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         let model = VoiceAgentOverlayModel(apiClient: apiClient)
         self.voiceOverlayModel = model
         self.voiceOverlayPresenter = VoiceAgentOverlayPresenter(model: model)
+        let callKit = VoiceAgentCallKitController(apiClient: apiClient)
+        self.voiceCallKitController = callKit
+        self.voiceCallKitPresenter = VoiceAgentCallKitOverlayPresenter(controller: callKit)
 
         super.init()
     }
@@ -102,7 +106,12 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         let micIdentifier = self.storedMicTabIdentifier.value
         if let micIdentifier, tabIdentifier == micIdentifier {
             Task { @MainActor in
-                self.voiceOverlayModel.toggle()
+                switch VoiceAgentModePreference.current {
+                case .overlay:
+                    self.voiceOverlayModel.toggle()
+                case .callKit:
+                    self.voiceCallKitController.toggle()
+                }
             }
             return false
         }
@@ -117,6 +126,8 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
     private let onLogout: (() -> Void)?
     private let voiceOverlayModel: VoiceAgentOverlayModel
     private let voiceOverlayPresenter: VoiceAgentOverlayPresenter
+    private let voiceCallKitController: VoiceAgentCallKitController
+    private let voiceCallKitPresenter: VoiceAgentCallKitOverlayPresenter
     private weak var profileNav: UINavigationController?
     private var profileTapCount = 0
     private var profileLastTapAt: Date = .distantPast
@@ -199,6 +210,7 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
             for _ in 0..<200 {
                 if let scene = self.tabBarController.view.window?.windowScene {
                     self.voiceOverlayPresenter.attach(to: scene)
+                    self.voiceCallKitPresenter.attach(to: scene)
                     return
                 }
                 try? await Task.sleep(for: .milliseconds(50))

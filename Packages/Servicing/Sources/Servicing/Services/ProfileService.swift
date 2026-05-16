@@ -114,6 +114,7 @@ extension Profile {
             notifyAnnualReport: dto.notifyAnnualReport ?? true,
             notifyNewRecommendation: dto.notifyNewRecommendation ?? true,
             favoriteRealtimeVoice: dto.favoriteRealtimeVoice,
+            favoriteVibe: dto.favoriteVibe,
             createdAt: dto.createdAt ?? Date(),
             name: dto.name ?? "",
             email: dto.email ?? "",

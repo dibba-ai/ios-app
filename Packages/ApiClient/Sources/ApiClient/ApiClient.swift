@@ -198,7 +198,8 @@ public final class APIClient: APIClienting, @unchecked Sendable {
         let response: CreateRealtimeSessionResponse = try await apiClient.execute(
             query: RealtimeQueries.createRealtimeSession(
                 provider: input.provider,
-                voice: input.voice
+                voice: input.voice,
+                vibe: input.vibe
             ),
             variables: EmptyVariables(),
             operationName: "createRealtimeSession"
@@ -267,6 +268,7 @@ public final class MockAPIClient: APIClienting, @unchecked Sendable {
             notifyAnnualReport: true,
             notifyNewRecommendation: true,
             favoriteRealtimeVoice: nil,
+            favoriteVibe: nil,
             achievements: [],
             createdAt: Date(),
             email: "test@example.com",

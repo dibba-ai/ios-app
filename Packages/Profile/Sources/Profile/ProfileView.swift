@@ -20,8 +20,8 @@ public struct ProfileView: View {
             if let profile = profile {
                 ProfileSummarySection(profile: profile)
                 SubscriptionSection(profile: profile)
-                PreferencesSection(profile: profile, onUpdate: updateProfile)
                 AgentSection(profile: profile, onUpdate: updateProfile)
+                PreferencesSection(profile: profile, onUpdate: updateProfile)
                 NotificationsSection(profile: profile, onUpdate: updateProfile)
                 ApiKeysSection(
                     apiKeys: apiKeys,

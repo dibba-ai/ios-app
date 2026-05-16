@@ -143,6 +143,7 @@ public struct Profile: Codable, Equatable, Sendable {
 
     // User info
     public let favoriteRealtimeVoice: String?
+    public let favoriteVibe: String?
     public let createdAt: Date
     public let name: String
     public let email: String
@@ -170,6 +171,7 @@ public struct Profile: Codable, Equatable, Sendable {
         notifyAnnualReport: Bool = true,
         notifyNewRecommendation: Bool = true,
         favoriteRealtimeVoice: String? = nil,
+        favoriteVibe: String? = nil,
         createdAt: Date = Date(),
         name: String = "",
         email: String = "",
@@ -194,6 +196,7 @@ public struct Profile: Codable, Equatable, Sendable {
         self.notifyAnnualReport = notifyAnnualReport
         self.notifyNewRecommendation = notifyNewRecommendation
         self.favoriteRealtimeVoice = favoriteRealtimeVoice
+        self.favoriteVibe = favoriteVibe
         self.createdAt = createdAt
         self.name = name
         self.email = email
@@ -214,6 +217,7 @@ public struct Profile: Codable, Equatable, Sendable {
         case notifyAnnualReport = "notify_annual_report"
         case notifyNewRecommendation = "notify_new_recommendation"
         case favoriteRealtimeVoice = "favorite_realtime_voice"
+        case favoriteVibe = "favorite_vibe"
         case createdAt = "created_at"
         case name, email
         case firstName = "first_name"

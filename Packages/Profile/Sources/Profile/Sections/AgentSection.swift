@@ -1,4 +1,5 @@
 import ApiClient
+import Core
 import Dependencies
 import Servicing
 import SwiftUI
@@ -16,9 +17,15 @@ struct AgentSection: View {
         return voices.first { $0.voice == id }
     }
 
+    private var selectedVibe: VibeOption? {
+        guard let raw = profile.favoriteVibe else { return nil }
+        return VibeOption(rawValue: raw)
+    }
+
     var body: some View {
-        Section("Agentic AI") {
+        Section("Voice AI Agent") {
             voiceRow
+            vibeRow
         }
         .task {
             if voices.isEmpty {
@@ -45,6 +52,33 @@ struct AgentSection: View {
                         .lineLimit(1)
                 } else if let id = profile.favoriteRealtimeVoice, !id.isEmpty {
                     Text(id)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                } else {
+                    Text("Not Set")
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var vibeRow: some View {
+        NavigationLink {
+            VibeSelectView(
+                selected: profile.favoriteVibe,
+                onUpdate: { newValue in
+                    await onUpdate(UpdateProfileInput(favoriteVibe: newValue))
+                }
+            )
+        } label: {
+            LabeledContent("Vibe") {
+                if let vibe = selectedVibe {
+                    Text("\(vibe.emoji) \(vibe.label)")
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                } else if let raw = profile.favoriteVibe, !raw.isEmpty {
+                    Text(raw)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 } else {

@@ -3,6 +3,7 @@ import AVFoundation
 import Foundation
 import Observation
 import os.log
+import UIKit
 
 private let logger = Logger(subsystem: "ai.dibba.ios", category: "VoiceAgent.Overlay")
 
@@ -29,14 +30,38 @@ public final class VoiceAgentOverlayModel {
     public private(set) var visible: Bool = false
     public private(set) var assistantTranscript: String = ""
     public private(set) var userTranscript: String = ""
+    public var outputTranscriptVisible: Bool = true
+    public private(set) var isMuted: Bool = false
+    public private(set) var isSpeakerOn: Bool = true
+    public private(set) var connectedAt: Date?
 
     /// Mic level (0…1) used by the edge glow. Not yet sourced from WebRTC stats —
     /// reserved for a follow-up; currently breathes via the glow's internal driver.
     public private(set) var level: Float = 0
 
+    /// Inactivity window before the top transcript banner fades away.
+    public var transcriptInactivityTimeout: TimeInterval = 5
+
     public init(apiClient: any APIClienting, defaultVoice: String = "openai_sage") {
         self.apiClient = apiClient
         self.defaultVoice = defaultVoice
+    }
+
+    public func toggleOutputTranscript() {
+        outputTranscriptVisible.toggle()
+        haptic(.selection)
+    }
+
+    public func toggleMute() {
+        isMuted.toggle()
+        realtimeClient?.setMicMuted(isMuted)
+        haptic(.selection)
+    }
+
+    public func toggleSpeaker() {
+        isSpeakerOn.toggle()
+        realtimeClient?.setSpeakerEnabled(isSpeakerOn)
+        haptic(.selection)
     }
 
     /// Single entry point bound to the mic tab tap.
@@ -50,19 +75,26 @@ public final class VoiceAgentOverlayModel {
 
     public func show() {
         guard !visible else { return }
+        haptic(.lightImpact)
         visible = true
         phase = .connecting
         assistantTranscript = ""
         userTranscript = ""
+        currentAssistantItemId = nil
+        isMuted = false
+        isSpeakerOn = true
+        connectedAt = nil
         Task { await self.beginSession() }
     }
 
     public func stop() {
+        haptic(.mediumImpact)
         cancelTasks()
         realtimeClient?.disconnect()
         realtimeClient = nil
         phase = .idle
         visible = false
+        connectedAt = nil
     }
 
     // MARK: - Private
@@ -73,25 +105,27 @@ public final class VoiceAgentOverlayModel {
     private var eventTask: Task<Void, Never>?
     private var stateTask: Task<Void, Never>?
     private var levelTask: Task<Void, Never>?
+    private var transcriptClearTask: Task<Void, Never>?
+    private var currentAssistantItemId: String?
 
-    private func resolveVoice() async -> String {
+    private func resolvePreferences() async -> (voice: String, vibe: String?) {
         do {
             let profile = try await apiClient.getProfile()
-            if let voice = profile.favoriteRealtimeVoice, !voice.isEmpty {
-                return voice
-            }
+            let voice = (profile.favoriteRealtimeVoice?.isEmpty == false) ? profile.favoriteRealtimeVoice! : defaultVoice
+            let vibe = (profile.favoriteVibe?.isEmpty == false) ? profile.favoriteVibe : nil
+            return (voice, vibe)
         } catch {
             logger.warning("profile fetch failed, using default voice: \(error.localizedDescription)")
         }
-        return defaultVoice
+        return (defaultVoice, nil)
     }
 
     private func beginSession() async {
-        let voice = await resolveVoice()
+        let prefs = await resolvePreferences()
         let session: RealtimeSessionDTO
         do {
             session = try await apiClient.createRealtimeSession(
-                input: CreateRealtimeSessionInput(voice: voice)
+                input: CreateRealtimeSessionInput(voice: prefs.voice, vibe: prefs.vibe)
             )
         } catch {
             logger.error("createRealtimeSession failed: \(error.localizedDescription)")
@@ -123,6 +157,8 @@ public final class VoiceAgentOverlayModel {
             return
         }
         phase = .live
+        connectedAt = Date()
+        haptic(.success)
     }
 
     private func subscribeToClient(_ client: RealtimeClient) {
@@ -157,10 +193,21 @@ public final class VoiceAgentOverlayModel {
 
     private func handle(event: RealtimeEvent) {
         switch event {
-        case .assistantTranscriptDelta(_, let text):
+        case .assistantTranscriptDelta(let itemId, let text):
+            if itemId != currentAssistantItemId {
+                currentAssistantItemId = itemId
+                assistantTranscript = ""
+            }
             assistantTranscript += text
-        case .assistantTranscriptCompleted(_, let text):
+            transcriptClearTask?.cancel()
+        case .assistantTranscriptCompleted(let itemId, let text):
+            currentAssistantItemId = itemId
             assistantTranscript = text
+            transcriptClearTask?.cancel()
+        case .audioOutputDone:
+            scheduleTranscriptClear()
+        case .userTranscriptDelta(_, let text):
+            userTranscript += text
         case .userTranscriptCompleted(_, let text):
             userTranscript = text
         case .error(let message):
@@ -170,7 +217,19 @@ public final class VoiceAgentOverlayModel {
         }
     }
 
+    private func scheduleTranscriptClear() {
+        transcriptClearTask?.cancel()
+        let timeout = transcriptInactivityTimeout
+        transcriptClearTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(timeout))
+            guard let self, !Task.isCancelled else { return }
+            self.assistantTranscript = ""
+            self.currentAssistantItemId = nil
+        }
+    }
+
     private func fail(with message: String) {
+        haptic(.warning)
         cancelTasks()
         realtimeClient?.disconnect()
         realtimeClient = nil
@@ -187,10 +246,35 @@ public final class VoiceAgentOverlayModel {
         eventTask?.cancel()
         stateTask?.cancel()
         levelTask?.cancel()
+        transcriptClearTask?.cancel()
         eventTask = nil
         stateTask = nil
         levelTask = nil
+        transcriptClearTask = nil
         level = 0
+    }
+
+    private enum HapticKind {
+        case selection
+        case lightImpact
+        case mediumImpact
+        case success
+        case warning
+    }
+
+    private func haptic(_ kind: HapticKind) {
+        switch kind {
+        case .selection:
+            UISelectionFeedbackGenerator().selectionChanged()
+        case .lightImpact:
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        case .mediumImpact:
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        case .success:
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        case .warning:
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+        }
     }
 
     /// Distil any error from the backend / network into a one-line message we can

@@ -1,9 +1,10 @@
 import SwiftUI
+import VoiceAgent
 
-public struct VoiceAgentOverlayView: View {
-    @Bindable public var model: VoiceAgentOverlayModel
+public struct VoiceAgentCallKitOverlayView: View {
+    @Bindable public var model: VoiceAgentCallKitController
 
-    public init(model: VoiceAgentOverlayModel) {
+    public init(model: VoiceAgentCallKitController) {
         self.model = model
     }
 
@@ -48,8 +49,6 @@ public struct VoiceAgentOverlayView: View {
         .animation(.smooth(duration: 0.3), value: model.phase)
     }
 
-    // MARK: Background — system blur of underlying windows
-
     private var backgroundLayer: some View {
         ZStack {
             Rectangle()
@@ -62,31 +61,26 @@ public struct VoiceAgentOverlayView: View {
         }
     }
 
-    // MARK: Header
-
     private var header: some View {
         HStack(alignment: .center, spacing: 14) {
-            logoBadge
+            voiceBadge
             VStack(alignment: .leading, spacing: 4) {
                 captionView
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Text("Dibba Voice Agent")
+                Text(model.displayName)
                     .font(.system(size: 26, weight: .bold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(0.6)
             }
         }
     }
 
-    private var logoBadge: some View {
-        Image("dibba_logo", bundle: .module)
-            .resizable()
-            .interpolation(.high)
-            .scaledToFill()
+    private var voiceBadge: some View {
+        Text(model.voiceEmoji ?? "🎙️")
+            .font(.system(size: 32))
             .frame(width: 48, height: 48)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     @ViewBuilder
@@ -108,8 +102,6 @@ public struct VoiceAgentOverlayView: View {
         }
     }
 
-    // MARK: Transcript banner
-
     private var transcriptBanner: some View {
         Text(model.assistantTranscript)
             .font(.system(size: 17, weight: .medium, design: .rounded))
@@ -122,35 +114,21 @@ public struct VoiceAgentOverlayView: View {
             .glassBackground(in: RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
-    // MARK: Controls
-
     private var controls: some View {
-        VStack(spacing: 20) {
-            HStack(spacing: 32) {
-                callButton(
-                    label: "Speaker",
-                    systemImage: model.isSpeakerOn ? "speaker.wave.2.fill" : "speaker.slash.fill",
-                    isOn: model.isSpeakerOn,
-                    action: { model.toggleSpeaker() }
-                )
-                callButton(
-                    label: "Mute",
-                    systemImage: model.isMuted ? "mic.slash.fill" : "mic.fill",
-                    isOn: model.isMuted,
-                    action: { model.toggleMute() }
-                )
-                callButton(
-                    label: "Captions",
-                    systemImage: "captions.bubble.fill",
-                    isOn: model.outputTranscriptVisible,
-                    action: { model.toggleOutputTranscript() }
-                )
-            }
-            HStack {
-                Spacer()
-                endButton
-                Spacer()
-            }
+        HStack(spacing: 32) {
+            callButton(
+                label: "Mute",
+                systemImage: model.isMuted ? "mic.slash.fill" : "mic.fill",
+                isOn: model.isMuted,
+                action: { model.toggleMute() }
+            )
+            endButton
+            callButton(
+                label: "Captions",
+                systemImage: "captions.bubble.fill",
+                isOn: model.outputTranscriptVisible,
+                action: { model.toggleOutputTranscript() }
+            )
         }
     }
 
@@ -162,8 +140,10 @@ public struct VoiceAgentOverlayView: View {
                     Button(action: action) {
                         Image(systemName: systemImage)
                             .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(.black)
                             .frame(width: 68, height: 68)
                     }
+                    .tint(.white)
                     .buttonStyle(.glassProminent)
                     .clipShape(Circle())
                     .accessibilityLabel(label)
@@ -171,6 +151,7 @@ public struct VoiceAgentOverlayView: View {
                     Button(action: action) {
                         Image(systemName: systemImage)
                             .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(.white)
                             .frame(width: 68, height: 68)
                     }
                     .buttonStyle(.glass)
@@ -204,6 +185,7 @@ public struct VoiceAgentOverlayView: View {
                 Button(role: .destructive, action: { model.stop() }) {
                     Image(systemName: "phone.down.fill")
                         .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(.white)
                         .frame(width: 68, height: 68)
                 }
                 .tint(.red)
@@ -228,8 +210,6 @@ public struct VoiceAgentOverlayView: View {
     }
 }
 
-// MARK: - Timer caption
-
 private struct ConnectedTimer: View {
     let connectedAt: Date
 
@@ -242,13 +222,9 @@ private struct ConnectedTimer: View {
 
     private func format(elapsed: TimeInterval) -> String {
         let total = max(0, Int(elapsed))
-        let minutes = total / 60
-        let seconds = total % 60
-        return String(format: "%02d:%02d", minutes, seconds)
+        return String(format: "%02d:%02d", total / 60, total % 60)
     }
 }
-
-// MARK: - Glass background helper for non-button surfaces
 
 private extension View {
     @ViewBuilder

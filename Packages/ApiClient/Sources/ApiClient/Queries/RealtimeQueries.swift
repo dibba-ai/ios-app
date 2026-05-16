@@ -18,17 +18,22 @@ public enum RealtimeQueries {
         """
 
     /// Builds the `createRealtimeSession` mutation with the input literal inlined.
-    /// The backend exposes `provider` as an enum (unquoted) and currently does not
-    /// expose an `Input` type name we can declare as a variable, so we bake the
-    /// values directly into the query string.
-    public static func createRealtimeSession(provider: String, voice: String) -> String {
-        // Sanitise to defensively avoid breaking the query; both fields should
-        // only ever contain `[A-Za-z0-9_-]`.
+    /// `provider` and `vibe` are GraphQL enums (unquoted); `voice` is a string.
+    /// Backend does not expose an `Input` type name we can declare as a variable,
+    /// so we bake the values directly into the query string.
+    public static func createRealtimeSession(provider: String, voice: String, vibe: String? = nil) -> String {
         let safeProvider = provider.filter { $0.isLetter || $0.isNumber || $0 == "_" }
         let safeVoice = voice.filter { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "-" }
+        var fields = "provider: \(safeProvider), voice: \"\(safeVoice)\""
+        if let vibe, !vibe.isEmpty {
+            let safeVibe = vibe.filter { $0.isLetter || $0.isNumber || $0 == "_" }
+            if !safeVibe.isEmpty {
+                fields += ", vibe: \(safeVibe)"
+            }
+        }
         return """
             mutation createRealtimeSession {
-                createRealtimeSession(input: {provider: \(safeProvider), voice: "\(safeVoice)"}) {
+                createRealtimeSession(input: {\(fields)}) {
                     id
                     endpoint
                     model

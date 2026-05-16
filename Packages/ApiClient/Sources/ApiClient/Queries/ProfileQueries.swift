@@ -18,6 +18,7 @@ public enum ProfileQueries {
                 notify_annual_report
                 notify_new_recommendation
                 favorite_realtime_voice
+                favorite_vibe
                 achievements {
                     id
                     name
@@ -52,6 +53,7 @@ public enum ProfileQueries {
                 notify_annual_report
                 notify_new_recommendation
                 favorite_realtime_voice
+                favorite_vibe
                 achievements {
                     id
                     name

@@ -106,6 +106,34 @@ public enum TransportOption: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+public enum VibeOption: String, CaseIterable, Identifiable, Sendable {
+    case direct, funny, corporate, slay, caveman, surprise_me
+
+    public var id: String { rawValue }
+
+    public var label: String {
+        switch self {
+        case .direct: return "Direct"
+        case .funny: return "Funny"
+        case .corporate: return "Corporate"
+        case .slay: return "Slay"
+        case .caveman: return "Caveman"
+        case .surprise_me: return "Surprise Me"
+        }
+    }
+
+    public var emoji: String {
+        switch self {
+        case .direct: return "🎯"
+        case .funny: return "😄"
+        case .corporate: return "💼"
+        case .slay: return "💅"
+        case .caveman: return "🦴"
+        case .surprise_me: return "🎲"
+        }
+    }
+}
+
 public enum AgeOption: String, CaseIterable, Identifiable, Sendable {
     case under_20, twenties = "20s", thirties = "30s", forties = "40s", fifty_plus = "50_plus"
 
