@@ -50,4 +50,8 @@ public enum OnboardingStep: Int, CaseIterable, Identifiable, Sendable {
     public var next: OnboardingStep? {
         OnboardingStep(rawValue: rawValue + 1)
     }
+
+    public var previous: OnboardingStep? {
+        OnboardingStep(rawValue: rawValue - 1)
+    }
 }

@@ -17,6 +17,7 @@ let package = Package(
         .package(url: "https://github.com/RevenueCat/purchases-ios-spm.git", from: "5.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
         .package(path: "../Analytics"),
+        .package(path: "../Servicing"),
     ],
     targets: [
         .target(
@@ -26,6 +27,7 @@ let package = Package(
                 .product(name: "RevenueCatUI", package: "purchases-ios-spm"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 "Analytics",
+                "Servicing",
             ]
         ),
         .testTarget(

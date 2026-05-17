@@ -43,6 +43,10 @@ public final class OnboardingViewModel {
         step == .finish ? "Finish" : "Next"
     }
 
+    public var canGoBack: Bool {
+        step.previous != nil && !isSaving
+    }
+
     // MARK: Selection
 
     public func toggleGoal(_ option: GoalOption) {
@@ -78,6 +82,11 @@ public final class OnboardingViewModel {
         if step == .finish {
             analytics.capture(.onboardingAllAnswered, properties: snapshotProperties())
         }
+    }
+
+    public func goBack() {
+        guard let previous = step.previous else { return }
+        step = previous
     }
 
     public func submit() async {

@@ -25,7 +25,8 @@ public final class PaywallFlow {
     public func start() {
         let view = PaywallContainer(
             variationId: variationId,
-            onPurchaseCompleted: { [weak self] in self?.handlePurchaseCompleted() },
+            onPurchaseCompleted: { [weak self] in self?.handlePurchaseOrRestore() },
+            onRestoreCompleted: { [weak self] in self?.handlePurchaseOrRestore() },
             onDismiss: { [weak self] in self?.close() }
         )
         let host = UIHostingController(rootView: view)
@@ -41,14 +42,36 @@ public final class PaywallFlow {
 
     private weak var presenter: UIViewController?
     private weak var hostController: UIViewController?
+    private weak var activationController: UIViewController?
     private let variationId: String?
     private let onPurchaseCompleted: (() -> Void)?
     private let onDismiss: () -> Void
 
-    private func handlePurchaseCompleted() {
+    private func handlePurchaseOrRestore() {
+        let presentActivation = { [weak self] in
+            guard let self, let presenter = self.presenter else { return }
+            let activationView = SubscriptionActivationView(
+                onSuccess: { [weak self] in self?.closeActivation() },
+                onClose: { [weak self] in self?.closeActivation() }
+            )
+            let host = UIHostingController(rootView: activationView)
+            host.modalPresentationStyle = .fullScreen
+            self.activationController = host
+            presenter.present(host, animated: true)
+        }
+        if hostController?.presentingViewController != nil {
+            hostController?.dismiss(animated: true) {
+                presentActivation()
+            }
+        } else {
+            presentActivation()
+        }
+    }
+
+    private func closeActivation() {
         let purchaseHandler = onPurchaseCompleted
         let dismissHandler = onDismiss
-        hostController?.dismiss(animated: true) {
+        activationController?.dismiss(animated: true) {
             purchaseHandler?()
             dismissHandler()
         }

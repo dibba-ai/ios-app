@@ -8,10 +8,12 @@ public final class OnboardingFlow: NavigationFlowCoordinating {
 
     public init(
         rootNavigationController: UINavigationController,
-        onFinish: @escaping () -> Void
+        onFinish: @escaping () -> Void,
+        onLogout: @escaping () -> Void
     ) {
         self.rootNavigationController = rootNavigationController
         self.onFinish = onFinish
+        self.onLogout = onLogout
     }
 
     // MARK: Public
@@ -26,7 +28,7 @@ public final class OnboardingFlow: NavigationFlowCoordinating {
             self.finish()
             self.onFinish()
         }
-        let host = OnboardingHostView(viewModel: viewModel)
+        let host = OnboardingHostView(viewModel: viewModel, onLogout: onLogout)
         rootNavigationController.setViewControllers(
             [host.wrapped(hideNavBar: true)],
             animated: true
@@ -40,4 +42,5 @@ public final class OnboardingFlow: NavigationFlowCoordinating {
     // MARK: Private
 
     private let onFinish: () -> Void
+    private let onLogout: () -> Void
 }

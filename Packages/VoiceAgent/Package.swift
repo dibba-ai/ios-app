@@ -26,9 +26,6 @@ let package = Package(
             dependencies: [
                 "ApiClient",
                 .product(name: "LiveKitWebRTC", package: "webrtc-xcframework"),
-            ],
-            resources: [
-                .process("Resources"),
             ]
         ),
         .testTarget(

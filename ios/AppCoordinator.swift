@@ -43,6 +43,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
     @Dependency(\.appResetService) var appResetService
     @Dependency(\.appResetServiceRegistrar) var appResetServiceRegistrar
     @Dependency(\.profileService) var profileService
+    @Dependency(\.identityService) var identityService
     @Dependency(\.transactionService) var transactionService
     @Dependency(\.targetService) var targetService
     @Dependency(\.paywallService) var paywallService
@@ -69,6 +70,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
 
             // Drive onboarding state from server-side profile presence
             if accountManager.isSignedIn {
+                await bootstrapIdentity()
                 await paywallService.identify(userId: authService.currentUser?.id)
                 await identifyCurrentUser()
                 await syncPaywallAttributes()
@@ -130,6 +132,7 @@ final class AppCoordinator: NavigationFlowCoordinating {
                 guard let self else { return }
 
                 Task {
+                    await self.bootstrapIdentity()
                     await self.paywallService.identify(userId: self.authService.currentUser?.id)
                     await self.identifyCurrentUser()
                     await self.syncPaywallAttributes()
@@ -167,6 +170,10 @@ final class AppCoordinator: NavigationFlowCoordinating {
                         self.navigateToState(state)
                     }
                 }
+            },
+            onLogout: { [weak self] in
+                logger.info("onLogout callback from onboarding")
+                self?.handleLogout()
             }
         )
         add(child: onboarding)
@@ -276,6 +283,14 @@ final class AppCoordinator: NavigationFlowCoordinating {
                 startAuthFlow()
                 currentState = .needAuthenticationAndOnboarding
             }
+        }
+    }
+
+    private func bootstrapIdentity() async {
+        do {
+            _ = try await identityService.bootstrap()
+        } catch {
+            logger.error("Identity bootstrap failed: \(error.localizedDescription)")
         }
     }
 

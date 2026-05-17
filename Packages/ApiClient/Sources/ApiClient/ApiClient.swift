@@ -13,6 +13,10 @@ public enum APIConfiguration {
 // MARK: - API Client Protocol
 
 public protocol APIClienting: Sendable {
+    // Identity
+    func getIdentity() async throws -> IdentityDTO?
+    func createIdentity(input: CreateIdentityInput) async throws -> IdentityDTO
+
     // Profile
     func getProfile() async throws -> ProfileDTO
     func updateProfile(input: UpdateProfileInput) async throws -> ProfileDTO
@@ -60,6 +64,33 @@ public final class APIClient: APIClienting, @unchecked Sendable {
             baseURL: APIConfiguration.billingServiceURL,
             tokenProvider: tokenProvider
         )
+    }
+
+    // MARK: - Identity (Identity Service)
+
+    public func getIdentity() async throws -> IdentityDTO? {
+        do {
+            let response: CurrentUserResponse = try await identityClient.execute(
+                query: IdentityQueries.currentUser,
+                variables: EmptyVariables(),
+                operationName: "currentUser"
+            )
+            return response.currentUser
+        } catch let APIClientError.graphQLErrors(errors) where errors.contains(where: { $0.errorType == "404" }) {
+            return nil
+        }
+    }
+
+    public func createIdentity(input: CreateIdentityInput) async throws -> IdentityDTO {
+        let response: CreateCurrentUserResponse = try await identityClient.execute(
+            query: IdentityQueries.createCurrentUser,
+            variables: CreateCurrentUserVariables(changes: input),
+            operationName: "createCurrentUser"
+        )
+        guard let user = response.createCurrentUser else {
+            throw APIClientError.noData
+        }
+        return user
     }
 
     // MARK: - Profile (API Service)
@@ -253,6 +284,30 @@ public extension DependencyValues {
 
 public final class MockAPIClient: APIClienting, @unchecked Sendable {
     public init() {}
+
+    public func getIdentity() async throws -> IdentityDTO? {
+        IdentityDTO(
+            id: "mock-identity",
+            name: "Test User",
+            photoUrl: nil,
+            createdAt: Date(),
+            lastLogin: Date(),
+            platform: "ios",
+            experiences: nil
+        )
+    }
+
+    public func createIdentity(input: CreateIdentityInput) async throws -> IdentityDTO {
+        IdentityDTO(
+            id: "mock-identity",
+            name: input.name,
+            photoUrl: input.photoUrl,
+            createdAt: Date(),
+            lastLogin: Date(),
+            platform: "ios",
+            experiences: nil
+        )
+    }
 
     public func getProfile() async throws -> ProfileDTO {
         ProfileDTO(

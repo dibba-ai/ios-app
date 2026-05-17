@@ -87,6 +87,11 @@ public struct VoiceAgentCallKitOverlayView: View {
     private var captionView: some View {
         if case .live = model.phase, let connectedAt = model.connectedAt {
             ConnectedTimer(connectedAt: connectedAt)
+        } else if case .error = model.phase {
+            Text(captionText)
+                .foregroundStyle(.red)
+                .lineLimit(4)
+                .fixedSize(horizontal: false, vertical: true)
         } else {
             Text(captionText)
         }
@@ -103,15 +108,18 @@ public struct VoiceAgentCallKitOverlayView: View {
     }
 
     private var transcriptBanner: some View {
-        Text(model.assistantTranscript)
-            .font(.system(size: 17, weight: .medium, design: .rounded))
-            .foregroundStyle(.primary)
-            .multilineTextAlignment(.leading)
-            .lineLimit(6)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 18)
-            .padding(.vertical, 16)
-            .glassBackground(in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        ScrollView(.vertical, showsIndicators: false) {
+            Text(model.assistantTranscript)
+                .font(.system(size: 17, weight: .medium, design: .rounded))
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 16)
+        }
+        .frame(maxHeight: 240)
+        .glassBackground(in: RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
     private var controls: some View {

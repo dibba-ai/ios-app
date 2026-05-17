@@ -23,7 +23,6 @@ let package = Package(
         .package(path: "../Paywall"),
         .package(path: "../Analytics"),
         .package(path: "../FloatingMic"),
-        .package(path: "../VoiceAgent"),
         .package(path: "../VoiceAgentCallKit"),
     ],
     targets: [
@@ -39,7 +38,6 @@ let package = Package(
                 "Paywall",
                 "Analytics",
                 "FloatingMic",
-                "VoiceAgent",
                 "VoiceAgentCallKit",
             ]
         ),

@@ -5,7 +5,6 @@ import Foundation
 import os.log
 import Servicing
 import SwiftUI
-import VoiceAgentCallKit
 
 private let logger = Logger(subsystem: "ai.dibba.ios", category: "DebugView")
 
@@ -15,6 +14,7 @@ struct DebugView: View {
 
     @Dependency(\.authService) private var authService
     @Dependency(\.profileService) private var profileService
+    @Dependency(\.identityService) private var identityService
     @Dependency(\.transactionService) private var transactionService
     @Dependency(\.targetService) private var targetService
     @Dependency(\.reportService) private var reportService
@@ -24,8 +24,9 @@ struct DebugView: View {
     @State private var profile: Servicing.Profile?
     @State private var authUser: AuthUser?
     @State private var accessToken: String?
+    @State private var identity: IdentityDTO?
     @State private var profileJSONExpanded = false
-    @AppStorage(VoiceAgentModePreference.key) private var voiceAgentMode: String = VoiceAgentMode.overlay.rawValue
+    @State private var identityJSONExpanded = false
     @State private var copiedLabel: String?
     @State private var showCacheResetConfirmation = false
     @State private var showCacheResetSuccess = false
@@ -41,19 +42,19 @@ struct DebugView: View {
                 copyRow("Name", value: authUser?.name ?? profile?.name ?? "—")
             }
 
-            Section("Voice Agent") {
-                Picker("Implementation", selection: $voiceAgentMode) {
-                    ForEach(VoiceAgentMode.allCases, id: \.rawValue) { mode in
-                        Text(mode.displayName).tag(mode.rawValue)
-                    }
-                }
-                .pickerStyle(.menu)
-            }
-
             Section("Plan") {
                 copyRow("Plan", value: planLabel)
                 copyRow("Starts At", value: formatDate(profile?.planStartsAt))
                 copyRow("Expires At", value: formatDate(profile?.planExpiresAt))
+            }
+
+            Section("Identity") {
+                copyRow("ID", value: identity?.id ?? "—")
+                copyRow("Name", value: identity?.name ?? "—")
+                copyRow("Photo URL", value: identity?.photoUrl ?? "—")
+                copyRow("Platform", value: identity?.platform ?? "—")
+                copyRow("Created At", value: formatDate(identity?.createdAt))
+                copyRow("Last Login", value: formatDate(identity?.lastLogin))
             }
 
             Section("Profile JSON") {
@@ -63,6 +64,22 @@ struct DebugView: View {
                     } label: {
                         ScrollView(.horizontal, showsIndicators: true) {
                             Text(profileJSON)
+                                .font(.system(.footnote, design: .monospaced))
+                                .padding(.vertical, 4)
+                                .foregroundStyle(.primary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            Section("Identity JSON") {
+                DisclosureGroup("Show full identity", isExpanded: $identityJSONExpanded) {
+                    Button {
+                        copy(identityJSON, label: "Identity JSON")
+                    } label: {
+                        ScrollView(.horizontal, showsIndicators: true) {
+                            Text(identityJSON)
                                 .font(.system(.footnote, design: .monospaced))
                                 .padding(.vertical, 4)
                                 .foregroundStyle(.primary)
@@ -200,6 +217,18 @@ struct DebugView: View {
         return "{}"
     }
 
+    private var identityJSON: String {
+        guard let identity else { return "{}" }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        if let data = try? encoder.encode(identity),
+           let string = String(data: data, encoding: .utf8) {
+            return string
+        }
+        return "{}"
+    }
+
     private func loadData(force: Bool = false) async {
         do {
             profile = try await profileService.getProfile(force: force)
@@ -212,6 +241,12 @@ struct DebugView: View {
         } catch {
             logger.error("DebugView access token load failed: \(error.localizedDescription)")
             accessToken = nil
+        }
+        do {
+            identity = try await identityService.getIdentity()
+        } catch {
+            logger.error("DebugView identity load failed: \(error.localizedDescription)")
+            identity = nil
         }
     }
 

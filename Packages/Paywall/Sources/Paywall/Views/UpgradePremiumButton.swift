@@ -6,10 +6,14 @@ import SwiftUI
 /// presentation state so feature modules never have to wire `.sheet` or know
 /// anything about RevenueCat.
 ///
+/// `onPremiumActivated` fires after the subscription activation cover finishes
+/// — at that point the server-side profile has flipped to premium. Parents
+/// (e.g. ProfileView) should refresh their local profile state from inside it.
+///
 /// Usage:
 /// ```swift
 /// if !profile.isPremium {
-///     UpgradePremiumButton()
+///     UpgradePremiumButton(onPremiumActivated: { await reloadProfile() })
 /// }
 /// ```
 public struct UpgradePremiumButton: View {
@@ -17,10 +21,12 @@ public struct UpgradePremiumButton: View {
 
     public init(
         label: String = "Upgrade to Premium",
-        variationId: String? = nil
+        variationId: String? = nil,
+        onPremiumActivated: (() -> Void)? = nil
     ) {
         self.label = label
         self.variationId = variationId
+        self.onPremiumActivated = onPremiumActivated
     }
 
     // MARK: Public
@@ -33,8 +39,7 @@ public struct UpgradePremiumButton: View {
             isPaywallPresented = true
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: "crown.fill")
-                    .foregroundStyle(.yellow)
+                Text("⭐️")
                 Text(label)
                     .fontWeight(.semibold)
                 Spacer()
@@ -46,11 +51,34 @@ public struct UpgradePremiumButton: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(.primary)
-        .sheet(isPresented: $isPaywallPresented) {
+        .sheet(isPresented: $isPaywallPresented, onDismiss: {
+            // Fires after the sheet has fully dismissed. Safe to present the
+            // activation cover here without racing the UIKit modal stack.
+            if pendingActivation {
+                pendingActivation = false
+                isActivating = true
+            }
+        }) {
             PaywallContainer(
                 variationId: variationId,
-                onPurchaseCompleted: { isPaywallPresented = false },
+                onPurchaseCompleted: {
+                    pendingActivation = true
+                    isPaywallPresented = false
+                },
+                onRestoreCompleted: {
+                    pendingActivation = true
+                    isPaywallPresented = false
+                },
                 onDismiss: { isPaywallPresented = false }
+            )
+        }
+        .fullScreenCover(isPresented: $isActivating) {
+            SubscriptionActivationView(
+                onSuccess: {
+                    isActivating = false
+                    onPremiumActivated?()
+                },
+                onClose: { isActivating = false }
             )
         }
     }
@@ -59,6 +87,9 @@ public struct UpgradePremiumButton: View {
 
     private let label: String
     private let variationId: String?
+    private let onPremiumActivated: (() -> Void)?
 
     @State private var isPaywallPresented = false
+    @State private var isActivating = false
+    @State private var pendingActivation = false
 }

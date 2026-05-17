@@ -149,6 +149,15 @@ public final class VoiceAgentCallKitController: NSObject {
         }
     }
 
+    private static func userFacingMessage(for error: Error) -> String {
+        if let apiError = error as? APIClientError, let desc = apiError.errorDescription {
+            return desc
+        }
+        let localized = error.localizedDescription
+        if !localized.isEmpty { return localized }
+        return "Voice agent unavailable. Try again later."
+    }
+
     private func handleHardFailure(reason: String) {
         haptic(.warning)
         phase = .error(reason)
@@ -161,7 +170,7 @@ public final class VoiceAgentCallKitController: NSObject {
         realtimeClient = nil
         sessionDTO = nil
         Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(3))
+            try? await Task.sleep(for: .seconds(6))
             guard let self, case .error = self.phase else { return }
             self.visible = false
             self.phase = .idle
@@ -353,7 +362,7 @@ extension VoiceAgentCallKitController: CXProviderDelegate {
             } catch {
                 logger.error("createRealtimeSession failed: \(error.localizedDescription)")
                 box.action.fail()
-                self.handleHardFailure(reason: "Couldn't create session.")
+                self.handleHardFailure(reason: Self.userFacingMessage(for: error))
             }
         }
     }
@@ -411,10 +420,7 @@ extension VoiceAgentCallKitController: CXProviderDelegate {
             } catch {
                 logger.error("WebRTC connect failed: \(error.localizedDescription)")
                 box.provider.reportCall(with: uuid, endedAt: Date(), reason: .failed)
-                self.realtimeClient = nil
-                self.currentCallUUID = nil
-                self.phase = .error(error.localizedDescription)
-                self.visible = false
+                self.handleHardFailure(reason: Self.userFacingMessage(for: error))
             }
         }
     }

@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SubscriptionSection: View {
     let profile: Servicing.Profile
+    var onPremiumActivated: (() -> Void)? = nil
 
     var body: some View {
         Section("Subscription") {
@@ -21,7 +22,7 @@ struct SubscriptionSection: View {
             }
 
             if !profile.isPremium {
-                UpgradePremiumButton()
+                UpgradePremiumButton(onPremiumActivated: onPremiumActivated)
             }
         }
     }

@@ -17,7 +17,6 @@ let package = Package(
         .package(path: "../Auth"),
         .package(path: "../ApiClient"),
         .package(path: "../Servicing"),
-        .package(path: "../VoiceAgentCallKit"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.0.0"),
     ],
     targets: [
@@ -27,7 +26,6 @@ let package = Package(
                 "Auth",
                 "ApiClient",
                 "Servicing",
-                "VoiceAgentCallKit",
                 .product(name: "Dependencies", package: "swift-dependencies"),
             ]
         ),

@@ -9,6 +9,10 @@ import SwiftUI
 ///
 /// Pass `variationId: nil` to render the offering marked "Current" on the
 /// dashboard. Pass an explicit id (e.g. `"winter_sale"`) to switch variations.
+///
+/// Activation polling lives one level up (caller's job) because RevenueCatUI
+/// auto-dismisses its enclosing sheet on a successful purchase — a child view
+/// here cannot survive that to display celebration UI.
 public struct PaywallContainer: View {
     // MARK: Lifecycle
 

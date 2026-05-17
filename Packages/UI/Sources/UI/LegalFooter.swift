@@ -31,7 +31,6 @@ public struct LegalFooter: View {
             .buttonStyle(.plain)
             .font(.footnote)
             .fontWeight(.bold)
-            .underline()
             .foregroundStyle(.secondary)
             VStack(spacing: 2) {
                 Text("Dibba.ai \u{00A9} 2026")

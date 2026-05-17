@@ -1,4 +1,5 @@
 import SwiftUI
+import UI
 
 struct MultiSelectButton: View {
     let emoji: String
@@ -21,10 +22,7 @@ struct MultiSelectButton: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 16)
             .foregroundStyle(isSelected ? Color.white : Color.primary)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(isSelected ? Color.accentColor : Color(uiColor: .secondarySystemBackground))
-            )
+            .background(backgroundFill)
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .strokeBorder(
@@ -37,5 +35,15 @@ struct MultiSelectButton: View {
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)
         .animation(.easeInOut(duration: 0.15), value: isSelected)
+    }
+
+    @ViewBuilder
+    private var backgroundFill: some View {
+        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+        if isSelected {
+            shape.fill(LinearGradient.brand)
+        } else {
+            shape.fill(Color(uiColor: .secondarySystemBackground))
+        }
     }
 }

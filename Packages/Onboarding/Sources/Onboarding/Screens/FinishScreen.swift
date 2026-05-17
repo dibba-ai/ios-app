@@ -15,7 +15,7 @@ struct FinishScreen: View {
                     endPoint: .bottomTrailing
                 ))
 
-            Text("Save your progress")
+            Text("Save Your Progress")
                 .font(.title2)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)

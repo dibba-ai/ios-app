@@ -9,7 +9,6 @@ import os.log
 import Profile
 import SwiftUI
 import UIKit
-import VoiceAgent
 import VoiceAgentCallKit
 
 private let logger = Logger(subsystem: "ai.dibba.ios", category: "TabBarCoordinator")
@@ -23,9 +22,6 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         self.onLogout = onLogout
 
         @Dependency(\.apiClient) var apiClient
-        let model = VoiceAgentOverlayModel(apiClient: apiClient)
-        self.voiceOverlayModel = model
-        self.voiceOverlayPresenter = VoiceAgentOverlayPresenter(model: model)
         let callKit = VoiceAgentCallKitController(apiClient: apiClient)
         self.voiceCallKitController = callKit
         self.voiceCallKitPresenter = VoiceAgentCallKitOverlayPresenter(controller: callKit)
@@ -77,7 +73,8 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
 
         var tabs: [UITab] = [feedTab, dashboardTab, profileTab]
 
-        if #available(iOS 26.0, *) {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        if #available(iOS 26.0, *), !isPad {
             let micTab = UISearchTab(viewControllerProvider: { _ in UIViewController() })
             micTab.image = UIImage(systemName: "mic.fill")
             micTab.title = ""
@@ -90,7 +87,30 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         tabBarController.selectedTab = dashboardTab
         tabBarController.delegate = self
         scheduleOverlayAttachment()
+
+        if isPad {
+            installFloatingMicButton()
+        }
+
         logger.info("Tab bar setup complete")
+    }
+
+    private func installFloatingMicButton() {
+        let controller = FloatingMicController { [weak self] in
+            guard let self else { return }
+            self.voiceCallKitController.toggle()
+        }
+        let button = FloatingMicButton(controller: controller)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        let host = tabBarController.view!
+        host.addSubview(button)
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: 64),
+            button.heightAnchor.constraint(equalToConstant: 64),
+            button.trailingAnchor.constraint(equalTo: host.safeAreaLayoutGuide.trailingAnchor, constant: -24),
+            button.bottomAnchor.constraint(equalTo: host.safeAreaLayoutGuide.bottomAnchor, constant: -24),
+        ])
+        floatingMicButton = button
     }
 
     public func didFinish(coordinator: Coordinating) {
@@ -106,12 +126,7 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
         let micIdentifier = self.storedMicTabIdentifier.value
         if let micIdentifier, tabIdentifier == micIdentifier {
             Task { @MainActor in
-                switch VoiceAgentModePreference.current {
-                case .overlay:
-                    self.voiceOverlayModel.toggle()
-                case .callKit:
-                    self.voiceCallKitController.toggle()
-                }
+                self.voiceCallKitController.toggle()
             }
             return false
         }
@@ -124,10 +139,9 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
     // MARK: Private
 
     private let onLogout: (() -> Void)?
-    private let voiceOverlayModel: VoiceAgentOverlayModel
-    private let voiceOverlayPresenter: VoiceAgentOverlayPresenter
     private let voiceCallKitController: VoiceAgentCallKitController
     private let voiceCallKitPresenter: VoiceAgentCallKitOverlayPresenter
+    private weak var floatingMicButton: FloatingMicButton?
     private weak var profileNav: UINavigationController?
     private var profileTapCount = 0
     private var profileLastTapAt: Date = .distantPast
@@ -209,7 +223,6 @@ public final class TabBarCoordinator: NSObject, CompositionCoordinating, UITabBa
             guard let self else { return }
             for _ in 0..<200 {
                 if let scene = self.tabBarController.view.window?.windowScene {
-                    self.voiceOverlayPresenter.attach(to: scene)
                     self.voiceCallKitPresenter.attach(to: scene)
                     return
                 }

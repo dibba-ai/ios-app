@@ -19,7 +19,10 @@ public struct ProfileView: View {
         List {
             if let profile = profile {
                 ProfileSummarySection(profile: profile)
-                SubscriptionSection(profile: profile)
+                SubscriptionSection(
+                    profile: profile,
+                    onPremiumActivated: { Task { await loadData(force: true) } }
+                )
                 AgentSection(profile: profile, onUpdate: updateProfile)
                 PreferencesSection(profile: profile, onUpdate: updateProfile)
                 NotificationsSection(profile: profile, onUpdate: updateProfile)
@@ -30,13 +33,15 @@ public struct ProfileView: View {
                     onAddDevice: { Task { await addDevice() } }
                 )
                 ActionsSection(
+                    isPremium: profile.isPremium,
                     onContactSupport: {
                         SupportMailComposer.openMail(subject: "Support Request", profile: profile, authUser: authUser)
                     },
                     onDeleteAccountConfirmed: {
                         SupportMailComposer.openMail(subject: "Delete My Account", profile: profile, authUser: authUser)
                     },
-                    onSignOutConfirmed: { onLogout?() }
+                    onSignOutConfirmed: { onLogout?() },
+                    onPremiumActivated: { Task { await loadData(force: true) } }
                 )
 
                 Section {} footer: {
